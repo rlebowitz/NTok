@@ -1,0 +1,84 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="resources\default\default_abbrev.cfg" />
+    <None Remove="resources\default\default_classes.cfg" />
+    <None Remove="resources\default\default_class_hierarchy.xml" />
+    <None Remove="resources\default\default_clitics.cfg" />
+    <None Remove="resources\default\default_macros.cfg" />
+    <None Remove="resources\default\default_nonCapTerms.txt" />
+    <None Remove="resources\default\default_punct.cfg" />
+    <None Remove="resources\de\de_abbrev.cfg" />
+    <None Remove="resources\de\de_b-abbrev.txt" />
+    <None Remove="resources\de\de_classes.cfg" />
+    <None Remove="resources\de\de_class_hierarchy.xml" />
+    <None Remove="resources\de\de_clitics.cfg" />
+    <None Remove="resources\de\de_macros.cfg" />
+    <None Remove="resources\de\de_nonCapTerms.txt" />
+    <None Remove="resources\de\de_punct.cfg" />
+    <None Remove="resources\en\en_abbrev.cfg" />
+    <None Remove="resources\en\en_b-abbrev.txt" />
+    <None Remove="resources\en\en_classes.cfg" />
+    <None Remove="resources\en\en_class_hierarchy.xml" />
+    <None Remove="resources\en\en_clitics.cfg" />
+    <None Remove="resources\en\en_macros.cfg" />
+    <None Remove="resources\en\en_nonCapTerms.txt" />
+    <None Remove="resources\en\en_punct.cfg" />
+    <None Remove="resources\en\en_titles.txt" />
+    <None Remove="resources\it\it_abbrev.cfg" />
+    <None Remove="resources\it\it_b-abbrev.txt" />
+    <None Remove="resources\it\it_classes.cfg" />
+    <None Remove="resources\it\it_class_hierarchy.xml" />
+    <None Remove="resources\it\it_clitics.cfg" />
+    <None Remove="resources\it\it_macros.cfg" />
+    <None Remove="resources\it\it_nonCapTerms.txt" />
+    <None Remove="resources\it\it_punct.cfg" />
+    <None Remove="resources\ntok.cfg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="resources\default\default_abbrev.cfg" />
+    <EmbeddedResource Include="resources\default\default_classes.cfg" />
+    <EmbeddedResource Include="resources\default\default_class_hierarchy.xml" />
+    <EmbeddedResource Include="resources\default\default_clitics.cfg" />
+    <EmbeddedResource Include="resources\default\default_macros.cfg" />
+    <EmbeddedResource Include="resources\default\default_nonCapTerms.txt" />
+    <EmbeddedResource Include="resources\default\default_punct.cfg" />
+    <EmbeddedResource Include="resources\de\de_abbrev.cfg" />
+    <EmbeddedResource Include="resources\de\de_b-abbrev.txt" />
+    <EmbeddedResource Include="resources\de\de_classes.cfg" />
+    <EmbeddedResource Include="resources\de\de_class_hierarchy.xml" />
+    <EmbeddedResource Include="resources\de\de_clitics.cfg" />
+    <EmbeddedResource Include="resources\de\de_macros.cfg" />
+    <EmbeddedResource Include="resources\de\de_nonCapTerms.txt" />
+    <EmbeddedResource Include="resources\de\de_punct.cfg" />
+    <EmbeddedResource Include="resources\en\en_abbrev.cfg" />
+    <EmbeddedResource Include="resources\en\en_b-abbrev.txt" />
+    <EmbeddedResource Include="resources\en\en_classes.cfg" />
+    <EmbeddedResource Include="resources\en\en_class_hierarchy.xml" />
+    <EmbeddedResource Include="resources\en\en_clitics.cfg" />
+    <EmbeddedResource Include="resources\en\en_macros.cfg" />
+    <EmbeddedResource Include="resources\en\en_nonCapTerms.txt" />
+    <EmbeddedResource Include="resources\en\en_punct.cfg" />
+    <EmbeddedResource Include="resources\en\en_titles.txt" />
+    <EmbeddedResource Include="resources\it\it_abbrev.cfg" />
+    <EmbeddedResource Include="resources\it\it_b-abbrev.txt" />
+    <EmbeddedResource Include="resources\it\it_classes.cfg" />
+    <EmbeddedResource Include="resources\it\it_class_hierarchy.xml" />
+    <EmbeddedResource Include="resources\it\it_clitics.cfg" />
+    <EmbeddedResource Include="resources\it\it_macros.cfg" />
+    <EmbeddedResource Include="resources\it\it_nonCapTerms.txt" />
+    <EmbeddedResource Include="resources\it\it_punct.cfg" />
+    <EmbeddedResource Include="resources\ntok.cfg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>
