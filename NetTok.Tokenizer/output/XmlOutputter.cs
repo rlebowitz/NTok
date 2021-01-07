@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using NetTok.Tokenizer.annotate;
-using NetTok.Tokenizer.exceptions;
+using NetTok.Tokenizer.Exceptions;
 
 /*
  * JTok
@@ -34,12 +34,11 @@ namespace NetTok.Tokenizer.output
 	using Element = org.w3c.dom.Element;
 
 	using FileTools = FileTools;
-    using AnnotatedString = AnnotatedString;
-	using ProcessingException = ProcessingException;
+    using ProcessingException = ProcessingException;
 
 	/// <summary>
 	/// <seealso cref="XmlOutputter"/> provides static methods that return an XML presentation of an
-	/// <seealso cref="AnnotatedString"/>.
+	/// <seealso cref="IAnnotatedString"/>.
 	/// 
 	/// @author Joerg Steffen, DFKI
 	/// </summary>
@@ -112,7 +111,7 @@ namespace NetTok.Tokenizer.output
 	  /// <returns> the XML document </returns>
 	  /// <exception cref="ProcessingException">
 	  ///              if an error occurs </exception>
-	  public static Document createXmlDocument(AnnotatedString input)
+	  public static Document createXmlDocument(IAnnotatedString input)
 	  {
 
 		// create result document
@@ -146,21 +145,21 @@ namespace NetTok.Tokenizer.output
 		while (c != CharacterIterator.DONE)
 		{
 
-		  int tokenStart = input.getRunStart(NTok.CLASS_ANNO);
-		  int tokenEnd = input.getRunLimit(NTok.CLASS_ANNO);
+		  int tokenStart = input.GetRunStart(NTok.ClassAnnotation);
+		  int tokenEnd = input.GetRunLimit(NTok.ClassAnnotation);
 		  // check if c belongs to a token
-		  if (null != input.getAnnotation(NTok.CLASS_ANNO))
+		  if (null != input.GetAnnotation(NTok.ClassAnnotation))
 		  {
 			// get tag
-			string type = (string)input.getAnnotation(NTok.CLASS_ANNO);
+			string type = (string)input.GetAnnotation(NTok.ClassAnnotation);
 			if (null == type)
 			{
-			  throw new ProcessingException(string.Format("undefined class {0}", input.getAnnotation(NTok.CLASS_ANNO)));
+			  throw new ProcessingException(string.Format("undefined class {0}", input.GetAnnotation(NTok.ClassAnnotation)));
 			}
 			// create new element
 			Element xmlToken = doc.createElement(XML_TOKEN);
 			// set attributes
-			string image = input.substring(tokenStart, tokenEnd - tokenStart);
+			string image = input.Substring(tokenStart, tokenEnd - tokenStart);
 			xmlToken.setAttribute(IMAGE_ATT, image);
 			string ptbImage = Token.applyPtbFormat(image, type);
 			if (null != ptbImage)
@@ -172,7 +171,7 @@ namespace NetTok.Tokenizer.output
 			xmlToken.setAttribute(LENGTH_ATT, image.Length + "");
 
 			// check if token is first token of a paragraph or text unit
-			if (null != input.getAnnotation(NTok.BORDER_ANNO))
+			if (null != input.GetAnnotation(NTok.BorderAnnotation))
 			{
 			  // add current text unit to paragraph and create new one
 			  if (tu.hasChildNodes())
@@ -185,7 +184,7 @@ namespace NetTok.Tokenizer.output
 			}
 
 			// check if token is first token of a paragraph
-			if (input.getAnnotation(NTok.BORDER_ANNO) == NTok.P_BORDER)
+			if (input.GetAnnotation(NTok.BorderAnnotation) == NTok.PBorder)
 			{
 			  // add current paragraph to document and create new one
 			  if (p.hasChildNodes())
@@ -228,7 +227,7 @@ namespace NetTok.Tokenizer.output
 	  ///          the name of the XML file </param>
 	  /// <exception cref="ProcessingException">
 	  ///              if an error occurs </exception>
-	  public static void createXmlFile(AnnotatedString input, string encoding, string fileName)
+	  public static void createXmlFile(IAnnotatedString input, string encoding, string fileName)
 	  {
 
 		// tokenize text
@@ -266,7 +265,7 @@ namespace NetTok.Tokenizer.output
 	  /// <returns> an XML String </returns>
 	  /// <exception cref="ProcessingException">
 	  ///              if an error occurs </exception>
-	  public static string createXmlString(AnnotatedString input)
+	  public static string createXmlString(IAnnotatedString input)
 	  {
 
 		// tokenize text
@@ -340,7 +339,7 @@ namespace NetTok.Tokenizer.output
 		  NTok testTok = new NTok();
 
 		  // tokenize text
-		  AnnotatedString result = testTok.Tokenize(text, args[1]);
+		  IAnnotatedString result = testTok.Tokenize(text, args[1]);
 
 		  // print result
 		  Console.WriteLine(XmlOutputter.createXmlString(result));

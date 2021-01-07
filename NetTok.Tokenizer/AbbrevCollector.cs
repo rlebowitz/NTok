@@ -76,7 +76,7 @@ namespace NetTok.Tokenizer
 
 		// init tokenizer and get the relevant language resource
 		NTok jtok = new NTok();
-		LanguageResource langRes = jtok.getLanguageResource(lang);
+		LanguageResource langRes = jtok.GetLanguageResource(lang);
 
 		// get matchers and lists used to filter the abbreviations
 

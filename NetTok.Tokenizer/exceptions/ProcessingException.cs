@@ -22,7 +22,7 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.exceptions
+namespace NetTok.Tokenizer.Exceptions
 {
 	/// <summary>
 	/// <seealso cref="ProcessingException"/> is thrown when the processing of input data causes an error.

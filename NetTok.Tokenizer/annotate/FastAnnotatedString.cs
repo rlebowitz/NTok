@@ -1,13 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text;
-using NetTok.Tokenizer.exceptions;
+using NetTok.Tokenizer.Exceptions;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+* NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -24,482 +29,440 @@ using NetTok.Tokenizer.exceptions;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.annotate
+namespace NetTok.Tokenizer.Annotate
 {
-
-	using ProcessingException = ProcessingException;
-
-	/// <summary>
-	/// <seealso cref="FastAnnotatedString"/> is a fast implementation of the <seealso cref="AnnotatedString"/> interface. It
-	/// reserves an array of objects and an array of booleans for each newly introduced annotation key.
-	/// This provides fast access at the cost of memory. So only introduce new annotation keys if
-	/// necessary.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class FastAnnotatedString : AnnotatedString
-	{
-
-	  // current index within the string
-	  private int index;
-
-	  // index position at the end of the string
-	  private int endIndex;
-
-	  // content of the string as a character array
-	  private char[] content;
-
-	  // map of annotation keys to arrays of objects holding the annotation values;
-	  // the object at a certain index in the array is the annotation value of the corresponding
-	  // character in the annotated string
-	  private IDictionary<string, object> annotations;
-
-	  // map of annotation keys to arrays of booleans holding annotation borders
-	  private IDictionary<string, bool[]> borders;
-
-	  // last annotation key used
-	  private string currentKey;
-
-	  // last value array used
-	  private object[] currentValues;
-
-	  // last border array used
-	  private bool[] currentBorders;
-
-
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="FastAnnotatedString"/> for the given input text.
-	  /// </summary>
-	  /// <param name="inputText">
-	  ///          the text to annotate </param>
-	  public FastAnnotatedString(string inputText)
-	  {
-
-		// check if there is a string
-		if (string.ReferenceEquals(inputText, null))
-		{
-		  throw new System.NullReferenceException("null as input string is not allowed");
-		}
-		// initialization
-		this.endIndex = inputText.Length;
-		this.content = inputText.ToCharArray();
-		this.annotations = new Dictionary<string, object>(5);
-		this.borders = new Dictionary<string, bool[]>(5);
-		this.currentKey = null;
-		this.currentBorders = null;
-		this.currentValues = null;
-		this.index = 0;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override char first()
-	  {
-
-		this.index = 0;
-		return current();
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override char last()
-	  {
-
-		if (0 != this.endIndex)
-		{
-		  this.index = this.endIndex - 1;
-		}
-		else
-		{
-		  this.index = this.endIndex;
-		}
-		return current();
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override char current()
-	  {
-
-		if ((this.index >= 0) && (this.index < this.endIndex))
-		{
-		  return this.content[this.index];
-		}
-		return DONE;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override char next()
-	  {
-
-		if (this.index < (this.endIndex - 1))
-		{
-		  this.index++;
-		  return this.content[this.index];
-		}
-		this.index = this.endIndex;
-		return DONE;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override char previous()
-	  {
-
-		if (this.index > 0)
-		{
-		  this.index--;
-		  return this.content[this.index];
-		}
-		return DONE;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override int BeginIndex
-	  {
-		  get
-		  {
-    
-			return 0;
-		  }
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override int EndIndex
-	  {
-		  get
-		  {
-    
-			return this.endIndex;
-		  }
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override int Index
-	  {
-		  get
-		  {
-    
-			return this.index;
-		  }
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override char setIndex(int position)
-	  {
-
-		if ((position < 0) || (position > this.endIndex))
-		{
-		  throw new System.ArgumentException(string.Format("Invalid index {0:D}", position));
-		}
-		this.index = position;
-		return current();
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override object clone()
-	  {
-
-		try
-		{
-		  FastAnnotatedString other = (FastAnnotatedString)base.clone();
-		  return other;
-		}
-		catch (CloneNotSupportedException cnse)
-		{
-		  throw new ProcessingException(cnse.LocalizedMessage, cnse);
-		}
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual char charAt(int charIndex)
-	  {
-
-		if ((charIndex < 0) || (charIndex > this.endIndex))
-		{
-		  throw new System.ArgumentException(string.Format("Invalid index {0:D}", charIndex));
-		}
-		if ((charIndex >= 0) && (charIndex < this.endIndex))
-		{
-		  return this.content[charIndex];
-		}
-		return DONE;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual string substring(int start, int end)
-	  {
-
-		if ((start < 0) || (end > this.endIndex) || (start > end))
-		{
-		  throw new System.ArgumentException(string.Format("Invalid substring range {0:D} - {1:D}", start, end));
-		}
-		return new string(this.content, start, end - start);
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual void annotate(string key, object value, int start, int end)
-	  {
-
-		// check if range is legal
-		if ((start < 0) || (end > this.endIndex) || (start >= end))
-		{
-		  throw new System.ArgumentException(string.Format("Invalid substring range {0:D} - {1:D}", start, end));
-		}
-
-		if (!key.Equals(this.currentKey))
-		{
-		  // update currents
-		  object probe = this.annotations[key];
-		  if (null == probe)
-		  {
-			// create new arrays for this key
-			this.currentValues = new object[this.endIndex];
-			this.currentBorders = new bool[this.endIndex];
-			this.currentKey = key;
-			// if string is not empty, the first character is already a border
-			if (this.endIndex > 0)
-			{
-			  this.currentBorders[0] = true;
-			}
-			// store arrays
-			this.annotations[key] = this.currentValues;
-			this.borders[key] = this.currentBorders;
-		  }
-		  else
-		  {
-			this.currentValues = (object[])probe;
-			this.currentBorders = this.borders[key];
-			this.currentKey = key;
-		  }
-		}
-
-		// annotate
-		for (int i = start; i < end; i++)
-		{
-		  this.currentValues[i] = value;
-		  this.currentBorders[i] = false;
-		}
-		// set border for current annotation and the implicit next annotation (if there is one)
-		this.currentBorders[start] = true;
-		if (end < this.endIndex)
-		{
-		  this.currentBorders[end] = true;
-		}
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual object getAnnotation(string key)
-	  {
-
-		if ((this.index >= 0) && (this.index < this.endIndex))
-		{
-		  if (!key.Equals(this.currentKey))
-		  {
-			// update currents
-			object probe = this.annotations[key];
-			if (null != probe)
-			{
-			  this.currentKey = key;
-			  this.currentValues = (object[])probe;
-			  this.currentBorders = this.borders[key];
-			}
-			else
-			{
-			  return null;
-			}
-		  }
-
-		  // get annotation value
-		  return this.currentValues[this.index];
-		}
-
-		return null;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual int getRunStart(string key)
-	  {
-
-		if (!key.Equals(this.currentKey))
-		{
-		  // update currents
-		  object probe = this.borders[key];
-		  if (null != probe)
-		  {
-			this.currentKey = key;
-			this.currentValues = (object[])this.annotations[key];
-			this.currentBorders = (bool[])probe;
-		  }
-		  else
-		  {
-			return 0;
-		  }
-		}
-		// search border
-		for (int i = this.index; i >= 0; i--)
-		{
-		  if (this.currentBorders[i])
-		  {
-			return i;
-		  }
-		}
-		return 0;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual int getRunLimit(string key)
-	  {
-
-		if (!key.Equals(this.currentKey))
-		{
-		  // update currents
-		  object probe = this.borders[key];
-		  if (null != probe)
-		  {
-			this.currentKey = key;
-			this.currentValues = (object[])this.annotations[key];
-			this.currentBorders = (bool[])probe;
-		  }
-		  else
-		  {
-			return this.endIndex;
-		  }
-		}
-		// search border
-		for (int i = this.index + 1; i < this.endIndex; i++)
-		{
-		  if (this.currentBorders[i])
-		  {
-			return i;
-		  }
-		}
-		return this.endIndex;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual int findNextAnnotation(string key)
-	  {
-
-		if (!key.Equals(this.currentKey))
-		{
-		  // update currents
-		  object probe = this.annotations[key];
-		  if (null != probe)
-		  {
-			this.currentKey = key;
-			this.currentValues = (object[])probe;
-			this.currentBorders = this.borders[key];
-		  }
-		  else
-		  {
-			return this.endIndex;
-		  }
-		}
-
-		// search next annotation
-		int i;
-		for (i = this.index + 1; i < this.endIndex; i++)
-		{
-		  if (this.currentBorders[i])
-		  {
-			for (int j = i; j < this.endIndex; j++)
-			{
-			  if (null != this.currentValues[j])
-			  {
-				return j;
-			  }
-			}
-			return this.endIndex;
-		  }
-		}
-		return this.endIndex;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual string toString(string key)
-	  {
-
-		// init result
-		StringBuilder result = new StringBuilder();
-		// make a backup of the current index
-		int bakupIndex = this.index;
-		// iterate over string
-		this.index = 0;
-		while (this.index < this.endIndex)
-		{
-		  int endAnno = this.getRunLimit(key);
-		  if (null != getAnnotation(key))
-		  {
-			result.Append(substring(this.index, endAnno) + "\t" + this.index + "-" + endAnno + "\t" + getAnnotation(key) + System.getProperty("line.separator"));
-		  }
-		  this.index = endAnno;
-		}
-		// restore index
-		this.index = bakupIndex;
-		// return result
-		return result.ToString();
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override string ToString()
-	  {
-
-		return new string(this.content);
-	  }
-	}
-
+    /// <summary>
+    ///     <seealso cref="FastAnnotatedString" /> is a fast implementation of the <seealso cref="IAnnotatedString" />
+    ///     interface. It
+    ///     reserves an array of objects and an array of booleans for each newly introduced annotation key.
+    ///     This provides fast access at the cost of memory. So only introduce new annotation keys if necessary.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class FastAnnotatedString : IAnnotatedString
+    {
+        // current index within the string
+        private int _index;
+
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="FastAnnotatedString" /> for the given input text.
+        /// </summary>
+        /// <param name="inputText">The text to annotate.</param>
+        public FastAnnotatedString(string inputText)
+        {
+            Guard.NotNull(inputText);
+            _index = 0;
+            EndIndex = inputText.Length;
+            Content = inputText.ToCharArray();
+            Annotations = new Dictionary<string, object>(5);
+            Borders = new Dictionary<string, bool[]>(5);
+            CurrentKey = null;
+            CurrentBorders = null;
+            CurrentValues = null;
+        }
+
+        // map of annotation keys to arrays of objects holding the annotation values;
+        // the object at a certain index in the array is the annotation value of the corresponding
+        // character in the annotated string
+        public IDictionary<string, object> Annotations { get; }
+
+        // map of annotation keys to arrays of booleans holding annotation borders
+
+        public IDictionary<string, bool[]> Borders { get; }
+        // index position at the end of the string
+
+        // content of the string as a character array
+        public char[] Content { get; }
+
+        // last annotation key used
+        private string CurrentKey { get; set; }
+
+        // last value array used
+        private object[] CurrentValues { get; set; }
+
+        // last border array used
+        private bool[] CurrentBorders { get; set; }
+
+        public char First
+        {
+            get
+            {
+                Index = 0;
+                return Current;
+            }
+        }
+
+        public char Last
+        {
+            get
+            {
+                if (EndIndex != 0)
+                {
+                    Index = EndIndex - 1;
+                }
+                else
+                {
+                    Index = EndIndex;
+                }
+
+                return Current;
+            }
+        }
+
+        public char Next
+        {
+            get
+            {
+                if (Index < EndIndex - 1)
+                {
+                    Index++;
+                    return Content[Index];
+                }
+
+                Index = EndIndex;
+                return default;
+            }
+        }
+
+        public char Previous
+        {
+            get
+            {
+                if (Index > 0)
+                {
+                    Index--;
+                    return Content[Index];
+                }
+
+                return default;
+            }
+        }
+
+        public int BeginIndex => 0;
+
+
+        public int EndIndex { get; }
+
+
+        public int Index
+        {
+            get => _index;
+            set
+            {
+                if (value < 0 || value > EndIndex)
+                {
+                    throw new IndexOutOfRangeException($"Invalid index {value:D}");
+                }
+
+                _index = value;
+            }
+        }
+
+        public char SetIndex(int index)
+        {
+            if (index < 0 || index > EndIndex)
+            {
+                throw new IndexOutOfRangeException($"Invalid index {index:D}");
+            }
+
+            _index = index;
+            return Current;
+        }
+
+        public char Current
+        {
+            get
+            {
+                if (Index >= 0 && Index < EndIndex)
+                {
+                    return Content[Index];
+                }
+
+                return default;
+            }
+        }
+
+        public virtual char this[int charIndex]
+        {
+            get
+            {
+                if (charIndex < 0 || charIndex > EndIndex)
+                {
+                    throw new ArgumentException($"Invalid index {charIndex:D}");
+                }
+
+                if (charIndex < EndIndex)
+                {
+                    return Content[charIndex];
+                }
+
+                return default;
+            }
+        }
+
+        public string SubString(int start, int end)
+        {
+            if (start < 0 || end > EndIndex || start > end)
+            {
+                throw new ArgumentException($"Invalid substring range {start:D} - {end:D}");
+            }
+
+            return new string(Content, start, end - start);
+        }
+
+
+        public void Annotate(string key, object value, int start, int end)
+        {
+            // check if range is legal
+            if (start < 0 || end > EndIndex || start >= end)
+            {
+                throw new ArgumentException($"Invalid substring range {start:D} - {end:D}");
+            }
+
+            if (!key.Equals(CurrentKey))
+            {
+                // update currents
+                var probe = Annotations[key];
+                if (null == probe)
+                {
+                    // create new arrays for this key
+                    CurrentValues = new object[EndIndex];
+                    CurrentBorders = new bool[EndIndex];
+                    CurrentKey = key;
+                    // if string is not empty, the first character is already a border
+                    if (EndIndex > 0)
+                    {
+                        CurrentBorders[0] = true;
+                    }
+
+                    // store arrays
+                    Annotations[key] = CurrentValues;
+                    Borders[key] = CurrentBorders;
+                }
+                else
+                {
+                    CurrentValues = (object[]) probe;
+                    CurrentBorders = Borders[key];
+                    CurrentKey = key;
+                }
+            }
+
+            // annotate
+            for (var i = start; i < end; i++)
+            {
+                CurrentValues[i] = value;
+                CurrentBorders[i] = false;
+            }
+
+            // set border for current annotation and the implicit next annotation (if there is one)
+            CurrentBorders[start] = true;
+            if (end < EndIndex)
+            {
+                CurrentBorders[end] = true;
+            }
+        }
+
+        public object GetAnnotation(string key)
+        {
+            if (Index < 0 || Index >= EndIndex)
+            {
+                return null;
+            }
+
+            if (!key.Equals(CurrentKey))
+            {
+                // update currents
+                var probe = Annotations[key];
+                if (null != probe)
+                {
+                    CurrentKey = key;
+                    CurrentValues = (object[]) probe;
+                    CurrentBorders = Borders[key];
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            // get annotation value
+            return CurrentValues[Index];
+        }
+
+
+        /// <summary>
+        ///     {@inheritDoc}
+        /// </summary>
+        public virtual int GetRunStart(string key)
+        {
+            if (!key.Equals(CurrentKey))
+            {
+                // update currents
+                object probe = Borders[key];
+                if (null != probe)
+                {
+                    CurrentKey = key;
+                    CurrentValues = (object[]) Annotations[key];
+                    CurrentBorders = (bool[]) probe;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+
+            // search border
+            for (var i = Index; i >= 0; i--)
+            {
+                if (CurrentBorders[i])
+                {
+                    return i;
+                }
+            }
+
+            return 0;
+        }
+
+
+        /// <summary>
+        ///     {@inheritDoc}
+        /// </summary>
+        public virtual int GetRunLimit(string key)
+        {
+            if (!key.Equals(CurrentKey))
+            {
+                // update currents
+                object probe = Borders[key];
+                if (null != probe)
+                {
+                    CurrentKey = key;
+                    CurrentValues = (object[]) Annotations[key];
+                    CurrentBorders = (bool[]) probe;
+                }
+                else
+                {
+                    return EndIndex;
+                }
+            }
+
+            // search border
+            for (var i = Index + 1; i < EndIndex; i++)
+            {
+                if (CurrentBorders[i])
+                {
+                    return i;
+                }
+            }
+
+            return EndIndex;
+        }
+
+
+        /// <summary>
+        ///     {@inheritDoc}
+        /// </summary>
+        public virtual int FindNextAnnotation(string key)
+        {
+            if (!key.Equals(CurrentKey))
+            {
+                // update currents
+                var probe = Annotations[key];
+                if (null != probe)
+                {
+                    CurrentKey = key;
+                    CurrentValues = (object[]) probe;
+                    CurrentBorders = Borders[key];
+                }
+                else
+                {
+                    return EndIndex;
+                }
+            }
+
+            // search next annotation
+            int i;
+            for (i = Index + 1; i < EndIndex; i++)
+            {
+                if (CurrentBorders[i])
+                {
+                    for (var j = i; j < EndIndex; j++)
+                    {
+                        if (null != CurrentValues[j])
+                        {
+                            return j;
+                        }
+                    }
+
+                    return EndIndex;
+                }
+            }
+
+            return EndIndex;
+        }
+
+        public virtual string ToString(string key)
+        {
+            // init result
+            var result = new StringBuilder();
+            // make a backup of the current index
+            var backUp = Index;
+            // iterate over string
+            Index = 0;
+            while (Index < EndIndex)
+            {
+                var endAnnotation = GetRunLimit(key);
+                if (null != GetAnnotation(key))
+                {
+                    result.Append(
+                        $"{SubString(Index, endAnnotation)}\\t{Index}-{endAnnotation}\\t{GetAnnotation(key)}{Environment.NewLine}");
+                }
+
+                Index = endAnnotation;
+            }
+
+            // restore index
+            Index = backUp;
+            // return result
+            return result.ToString();
+        }
+
+        public IEnumerator<char> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return new string(Content);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        // public char setIndex(int position)
+        //{
+
+        //    if ((position < 0) || (position > this.EndIndex))
+        //    {
+        //        throw new System.ArgumentException(string.Format("Invalid index {0:D}", position));
+        //    }
+        //    this.Index = position;
+        //    return Current();
+        //}
+
+
+        public object Clone()
+        {
+            try
+            {
+                var other = (FastAnnotatedString) MemberwiseClone();
+                return other;
+            }
+            catch (Exception ex)
+            {
+                throw new ProcessingException(ex.Message, ex);
+            }
+        }
+    }
 }

@@ -67,15 +67,13 @@ namespace NetTok.Tokenizer
 	  ///          a map of macro names to regular expression strings </param>
 	  /// <exception cref="IOException">
 	  ///           if there is an error when reading the configuration </exception>
-//JAVA TO C# CONVERTER WARNING: Method 'throws' clauses are not available in C#:
-//ORIGINAL LINE: public AbbrevDescription(String resourceDir, String lang, java.util.Map<String, String> macrosMap) throws java.io.IOException
-	  public AbbrevDescription(string resourceDir, string lang, IDictionary<string, string> macrosMap)
+	  public AbbrevDescription(string lang, IDictionary<string, string> macrosMap)
 	  {
 
 		base.DefinitionsMap = new Dictionary<string, RegExp>();
 		base.RulesMap = new Dictionary<string, RegExp>();
 		base.RegExpMap = new Dictionary<RegExp, string>();
-		base.ClassMembersMap = new Dictionary<string, ISet<string>>();
+		base.ClassMembersMap = new Dictionary<string, HashSet<string>>();
 
 		Path abbrDescrPath = Paths.get(resourceDir).resolve(lang + ABBREV_DESCR);
 		StreamReader @in = new StreamReader(FileTools.openResourceFileAsStream(abbrDescrPath), Encoding.UTF8);
@@ -84,11 +82,11 @@ namespace NetTok.Tokenizer
 		readToLists(@in);
 
 		// read lists
-		base.loadLists(@in, resourceDir);
+		base.LoadLists(@in, resourceDir);
 
 		// read definitions
 		IDictionary<string, string> defsMap = new Dictionary<string, string>();
-		base.loadDefinitions(@in, macrosMap, defsMap);
+		base.LoadDefinitions(@in, macrosMap, defsMap);
 
 		RulesMap[ALL_RULE] = createAllRule(defsMap);
 

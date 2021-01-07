@@ -107,11 +107,11 @@ namespace NetTok.Tokenizer
 		StreamReader @in = new StreamReader(FileTools.openResourceFileAsStream(punctDescrPath), Encoding.UTF8);
 
 		// read config file to definitions start
-		readToDefinitions(@in);
+		ReadToDefinitions(@in);
 
 		// read definitions
 		IDictionary<string, string> defsMap = new Dictionary<string, string>();
-		base.loadDefinitions(@in, macrosMap, defsMap);
+		base.LoadDefinitions(@in, macrosMap, defsMap);
 
 		// when loadDefinitions returns the reader has reached the rules section;
 		// read rules

@@ -25,10 +25,8 @@ using NetTok.Tokenizer.annotate;
 
 namespace NetTok.Tokenizer.output
 {
-    using AnnotatedString = AnnotatedString;
-
-	/// <summary>
-	/// <seealso cref="Outputter"/> provides static methods that convert an <seealso cref="AnnotatedString"/> into a list of
+    /// <summary>
+	/// <seealso cref="Outputter"/> provides static methods that convert an <seealso cref="IAnnotatedString"/> into a list of
 	/// nested representation of <seealso cref="Paragraph"/>s with <seealso cref="TextUnit"/>s and <seealso cref="Token"/>s.
 	/// 
 	/// @author Joerg Steffen, DFKI
@@ -51,7 +49,7 @@ namespace NetTok.Tokenizer.output
 	  /// <param name="input">
 	  ///          the annotated string </param>
 	  /// <returns> a list of paragraphs </returns>
-	  public static IList<Paragraph> createParagraphs(AnnotatedString input)
+	  public static IList<Paragraph> createParagraphs(IAnnotatedString input)
 	  {
 
 		// init lists for paragraphs, text units and tokens
@@ -64,17 +62,17 @@ namespace NetTok.Tokenizer.output
 		while (c != CharacterIterator.DONE)
 		{
 
-		  int tokenStart = input.getRunStart(NTok.CLASS_ANNO);
-		  int tokenEnd = input.getRunLimit(NTok.CLASS_ANNO);
+		  int tokenStart = input.GetRunStart(NTok.ClassAnnotation);
+		  int tokenEnd = input.GetRunLimit(NTok.ClassAnnotation);
 		  // check if c belongs to a token
-		  string type = (string)input.getAnnotation(NTok.CLASS_ANNO);
+		  string type = (string)input.GetAnnotation(NTok.ClassAnnotation);
 		  if (null != type)
 		  {
 			// create new token instance
-			Token tok = new Token(tokenStart, tokenEnd, type, input.substring(tokenStart, tokenEnd - tokenStart));
+			Token tok = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd - tokenStart));
 
 			// check if token is first token of a paragraph or text unit
-			if (null != input.getAnnotation(NTok.BORDER_ANNO))
+			if (null != input.GetAnnotation(NTok.BorderAnnotation))
 			{
 			  // add current text unit to paragraph and create new one
 			  tuList.Add(new TextUnit(tokenList));
@@ -82,7 +80,7 @@ namespace NetTok.Tokenizer.output
 			}
 
 			// check if token is first token of a paragraph
-			if (input.getAnnotation(NTok.BORDER_ANNO) == NTok.P_BORDER)
+			if (input.GetAnnotation(NTok.BorderAnnotation) == NTok.PBorder)
 			{
 			  // add current paragraph to result list and create new one
 			  paraList.Add(new Paragraph(tuList));
@@ -113,7 +111,7 @@ namespace NetTok.Tokenizer.output
 	  /// <param name="input">
 	  ///          the annotated string </param>
 	  /// <returns> a list of tokens </returns>
-	  public static IList<Token> createTokens(AnnotatedString input)
+	  public static IList<Token> createTokens(IAnnotatedString input)
 	  {
 
 		// init list for tokens
@@ -124,14 +122,14 @@ namespace NetTok.Tokenizer.output
 		while (c != CharacterIterator.DONE)
 		{
 
-		  int tokenStart = input.getRunStart(NTok.CLASS_ANNO);
-		  int tokenEnd = input.getRunLimit(NTok.CLASS_ANNO);
+		  int tokenStart = input.GetRunStart(NTok.ClassAnnotation);
+		  int tokenEnd = input.GetRunLimit(NTok.ClassAnnotation);
 		  // check if c belongs to a token
-		  string type = (string)input.getAnnotation(NTok.CLASS_ANNO);
+		  string type = (string)input.GetAnnotation(NTok.ClassAnnotation);
 		  if (null != type)
 		  {
 			// create new token instance
-			Token tok = new Token(tokenStart, tokenEnd, type, input.substring(tokenStart, tokenEnd - tokenStart));
+			Token tok = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd - tokenStart));
 
 			// add token to token list
 			tokenList.Add(tok);

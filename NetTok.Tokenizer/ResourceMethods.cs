@@ -14,7 +14,7 @@ namespace NetTok.Tokenizer
         ///     Format: "{Namespace}.{Folder}.{filename}.{Extension}"
         /// </remarks>
         /// <returns>The text contents of the specified file, or an empty string if there are no contents.</returns>
-        public static string ReadResource(string fileName)
+        public static Stream ReadResource(string fileName)
         {
             Guard.NotNull(fileName);
             var assembly = Assembly.GetExecutingAssembly();
@@ -24,14 +24,7 @@ namespace NetTok.Tokenizer
                 throw new FileNotFoundException($"The resource file: {fileName} was not found.");
             }
 
-            using var stream = assembly.GetManifestResourceStream(resourcePath);
-            if (stream != null)
-            {
-                using var reader = new StreamReader(stream);
-                return reader.ReadToEnd();
-            }
-
-            return string.Empty;
+            return assembly.GetManifestResourceStream(resourcePath);
         }
 
         /// <summary>
@@ -44,7 +37,7 @@ namespace NetTok.Tokenizer
         ///     If there are no resource files for the specified language, the method will return the default information.
         /// </remarks>
         /// <returns>The text contents of the specified file.</returns>
-        public static string ReadResource(string language, string fileName)
+        public static Stream ReadResource(string language, string fileName)
         {
             if (string.IsNullOrWhiteSpace(language))
             {
@@ -65,14 +58,7 @@ namespace NetTok.Tokenizer
                 }
             }
 
-            using var stream = assembly.GetManifestResourceStream(resourcePath);
-            if (stream != null)
-            {
-                using var reader = new StreamReader(stream);
-                return reader.ReadToEnd();
-            }
-
-            throw new FileNotFoundException($"Unable to read the file: {fullFileName}");
+            return assembly.GetManifestResourceStream(resourcePath);
         }
     }
 }

@@ -22,7 +22,7 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.exceptions
+namespace NetTok.Tokenizer.Exceptions
 {
 	/// <summary>
 	/// <seealso cref="LanguageNotSupportedException"/> is thrown when the necessary language resources are not

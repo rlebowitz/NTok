@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Xml.Linq;
-using NetTok.Tokenizer.exceptions;
+using NetTok.Tokenizer.Exceptions;
 using NetTok.Tokenizer.regexp;
 
 /*
@@ -53,13 +53,10 @@ namespace NetTok.Tokenizer
         /// <param name="language">
         ///     the name of the language for which this class contains the resources
         /// </param>
-        /// <param name="resourceDir">
-        ///     the name of the resource directory
-        /// </param>
         /// <exception cref="InitializationException">
         ///     if an error occurs
         /// </exception>
-        public LanguageResource(string language, string resourceDir)
+        public LanguageResource(string language)
         {
             // init stuff
             AncestorsMap = new Dictionary<string, List<string>>();
@@ -72,8 +69,8 @@ namespace NetTok.Tokenizer
             try
             {
                 // load classes hierarchy
-                var text = ResourceMethods.ReadResource(language, ClassesHierarchy);
-                XDocument document = XDocument.Parse(text);
+                using var stream = ResourceMethods.ReadResource(language, ClassesHierarchy);
+                XDocument document = XDocument.Parse(stream);
                 // set hierarchy root
                 ClassesRoot = document.Root;
                 // map class names to dom elements
@@ -81,7 +78,7 @@ namespace NetTok.Tokenizer
                 MapClasses(ClassesRoot.Elements().ToList());
                 // load macros
                 Dictionary<string, string> macrosMap = new Dictionary<string, string>();
-                Description.loadMacros(Paths.get(resourceDir).resolve(language + MacrosConfiguration), macrosMap);
+                Description.LoadMacros(Language, MacrosConfiguration, macrosMap);
 
                 // load punctuation description
                 PunctuationDescription = new PunctDescription(resourceDir, language, macrosMap);
