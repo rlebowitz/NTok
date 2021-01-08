@@ -23,20 +23,20 @@ using NetTok.Tokenizer.Exceptions;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.regexp
+namespace NetTok.Tokenizer.RegExp
 {
 
-	using InitializationException = InitializationException;
-	using AutomatonMatcher = dk.brics.automaton.AutomatonMatcher;
-	using RunAutomaton = dk.brics.automaton.RunAutomaton;
+    using InitializationException = InitializationException;
+    using AutomatonMatcher = dk.brics.automaton.AutomatonMatcher;
+    using RunAutomaton = dk.brics.automaton.RunAutomaton;
 
-	/// <summary>
-	/// Implements the <seealso cref="RegExp"/> interface for regular expressions of the dk.brics.automaton
-	/// package.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class DkBricsRegExp : RegExp
+    /// <summary>
+    /// Implements the <seealso cref="IRegExp"/> interface for regular expressions of the dk.brics.automaton
+    /// package.
+    /// 
+    /// @author Joerg Steffen, DFKI
+    /// </summary>
+    public class DkBricsRegExp : IRegExp
 	{
 
 	  // instance of a regular expression in the dk.brics.automaton package
@@ -60,7 +60,7 @@ namespace NetTok.Tokenizer.regexp
 	  /// <summary>
 	  /// {@inheritDoc}
 	  /// </summary>
-	  public virtual IList<Match> getAllMatches(string input)
+	  public virtual IList<Match> GetAllMatches(string input)
 	  {
 
 		// create AutomatonMatcher for input
@@ -79,7 +79,7 @@ namespace NetTok.Tokenizer.regexp
 	  /// <summary>
 	  /// {@inheritDoc}
 	  /// </summary>
-	  public virtual bool matches(string input)
+	  public virtual bool Matches(string input)
 	  {
 
 		// create AutomatonMatcher for input
@@ -95,7 +95,7 @@ namespace NetTok.Tokenizer.regexp
 	  /// <summary>
 	  /// {@inheritDoc}
 	  /// </summary>
-	  public virtual Match contains(string input)
+	  public virtual Match Contains(string input)
 	  {
 
 		// create AutomatonMatcher for input
@@ -112,7 +112,7 @@ namespace NetTok.Tokenizer.regexp
 	  /// <summary>
 	  /// {@inheritDoc}
 	  /// </summary>
-	  public virtual Match starts(string input)
+	  public virtual Match Starts(string input)
 	  {
 
 		// create AutomatonMatcher for input
@@ -129,7 +129,7 @@ namespace NetTok.Tokenizer.regexp
 	  /// <summary>
 	  /// {@inheritDoc}
 	  /// </summary>
-	  public virtual Match ends(string input)
+	  public virtual Match Ends(string input)
 	  {
 
 		// create AutomatonMatcher for input

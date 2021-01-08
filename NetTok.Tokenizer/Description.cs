@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using NetTok.Tokenizer.Exceptions;
-using NetTok.Tokenizer.regexp;
+using NetTok.Tokenizer.RegExp;
 
 /*
  NTok
@@ -95,16 +96,16 @@ namespace NetTok.Tokenizer
 
 
         // regular expression for matching references used in regular expressions of config files
-        private static readonly RegExp ReferencesMatcher = Factory.createRegExp("\\<[A-Za-z0-9_]+\\>");
+        private static readonly IRegExp ReferencesMatcher = Factory.createRegExp("\\<[A-Za-z0-9_]+\\>");
 
         /// <returns> the definitions map </returns>
-        public Dictionary<string, RegExp> DefinitionsMap { get; set; }
+        public Dictionary<string, IRegExp> DefinitionsMap { get; set; }
 
         /// <returns> the rules map </returns>
-        public Dictionary<string, RegExp> RulesMap { get; set; }
+        public Dictionary<string, IRegExp> RulesMap { get; set; }
 
         /// <returns> the regular expressions map </returns>
-        public Dictionary<RegExp, string> RegExpMap { get; set; }
+        public Dictionary<IRegExp, string> RegExpMap { get; set; }
 
         /// <returns> the class members map </returns>
         public virtual Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
@@ -150,10 +151,10 @@ namespace NetTok.Tokenizer
         public static IDictionary<string, string> LoadMacros(string language, string fileName,
             Dictionary<string, string> macroMap)
         {
-            var s = ResourceMethods.ReadResource(language, fileName);
-            var @in = new StringReader(s);
+            var stream = ResourceMethods.ReadResource(language, fileName);
+            var reader = new StreamReader(stream);
             string line;
-            while ((line = @in.ReadLine()) != null)
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
@@ -183,23 +184,17 @@ namespace NetTok.Tokenizer
         ///     Reads from the given reader until the lists section starts. Immediately returns if the reader
         ///     is {@code null}.
         /// </summary>
-        /// <param name="in">
+        /// <param name="reader">
         ///     the reader
         /// </param>
         /// <exception cref="IOException">
         ///     if there is an error when reading
         /// </exception>
-        //JAVA TO C# CONVERTER WARNING: Method 'throws' clauses are not available in C#:
-//ORIGINAL LINE: protected static void readToLists(java.io.BufferedReader in) throws java.io.IOException
-        public static void readToLists(StreamReader @in)
+        public static void ReadToLists(StreamReader reader)
         {
-            if (null == @in)
-            {
-                return;
-            }
-
+            Guard.NotNull(reader);
             string line;
-            while (!ReferenceEquals(line = @in.ReadLine(), null))
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
@@ -219,21 +214,17 @@ namespace NetTok.Tokenizer
         ///     Reads from the given reader until the definitions section starts. Immediately returns if the
         ///     reader is {@code null}.
         /// </summary>
-        /// <param name="in">
+        /// <param name="reader">
         ///     the reader
         /// </param>
         /// <exception cref="IOException">
         ///     if there is an error when reading
         /// </exception>
-        public static void ReadToDefinitions(StreamReader @in)
+        public static void ReadToDefinitions(StreamReader reader)
         {
-            if (null == @in)
-            {
-                return;
-            }
-
+            Guard.NotNull(reader);
             string line;
-            while (!ReferenceEquals(line = @in.ReadLine(), null))
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
@@ -253,10 +244,10 @@ namespace NetTok.Tokenizer
         ///     Reads the definitions section from the given reader to map each token class from the
         ///     definitions to a regular expression that matches all tokens of that class. Also extends the
         ///     given definitions map.
-        ///     <br>
-        ///         Immediately returns if the reader is {@code null}.
+        ///     <br />
+        ///     Immediately returns if the reader is {@code null}.
         /// </summary>
-        /// <param name="in">
+        /// <param name="reader">
         ///     the reader
         /// </param>
         /// <param name="macrosMap">
@@ -271,21 +262,16 @@ namespace NetTok.Tokenizer
         /// <exception cref="InitializationException">
         ///     if configuration fails
         /// </exception>
-        
-        public virtual void LoadDefinitions(StreamReader @in, IDictionary<string, string> macrosMap,
+        public virtual void LoadDefinitions(StreamReader reader, IDictionary<string, string> macrosMap,
             IDictionary<string, string> defMap)
         {
-            if (null == @in)
-            {
-                return;
-            }
-
+            Guard.NotNull(reader);
             // init temporary map where to store the regular expression string
             // for each class
             IDictionary<string, StringBuilder> tempMap = new Dictionary<string, StringBuilder>();
 
             string line;
-            while (!ReferenceEquals(line = @in.ReadLine(), null))
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
@@ -302,13 +288,12 @@ namespace NetTok.Tokenizer
                 var secondSep = line.LastIndexOf(":", StringComparison.Ordinal);
                 if (firstSep == -1 || secondSep == firstSep)
                 {
-                    throw new InitializationException(string.Format("missing separator in definitions section line {0}",
-                        line));
+                    throw new InitializationException($"missing separator in definitions section line {line}");
                 }
 
                 var defName = line.Substring(0, firstSep).Trim();
-                var regExpString = line.Substring(firstSep + 1, secondSep - (firstSep + 1)).Trim();
-                var className = line.Substring(secondSep + 1).Trim();
+                var regExpString = line[(firstSep + 1)..secondSep].Trim();
+                var className = line[(secondSep + 1)..].Trim();
 
                 // expand possible macros
                 regExpString = ReplaceReferences(regExpString, macrosMap);
@@ -316,7 +301,7 @@ namespace NetTok.Tokenizer
                 // check for empty regular expression
                 if (regExpString.Length == 0)
                 {
-                    throw new ProcessingException(string.Format("empty regular expression in line {0}", line));
+                    throw new ProcessingException($"empty regular expression in line {line}");
                 }
 
                 // extend class matcher:
@@ -349,7 +334,7 @@ namespace NetTok.Tokenizer
                 catch (Exception e)
                 {
                     throw new ProcessingException(
-                        $"cannot create regular expression for {oneEntry.Key} from {oneEntry.Value}: {e.Message}");
+                        $"Cannot create regular expression for {oneEntry.Key} from {oneEntry.Value}: {e.Message}");
                 }
             }
         }
@@ -358,13 +343,13 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     Reads the rules section from the given reader to map each rules to a regular expression that
         ///     matches all tokens of that rule.
-        ///     <br>
-        ///         Immediately returns if the reader is {@code null}.
+        ///     <br />
+        ///     Immediately returns if the reader is {@code null}.
         /// </summary>
-        /// <param name="in">
+        /// <param name="reader">
         ///     the reader
         /// </param>
-        /// <param name="defsMap">
+        /// <param name="definitionsMap">
         ///     a map of definition names to regular expression strings
         /// </param>
         /// <param name="macrosMap">
@@ -376,18 +361,12 @@ namespace NetTok.Tokenizer
         /// <exception cref="InitializationException">
         ///     if configuration fails
         /// </exception>
-        //JAVA TO C# CONVERTER WARNING: Method 'throws' clauses are not available in C#:
-//ORIGINAL LINE: protected void loadRules(java.io.BufferedReader in, java.util.Map<String, String> defsMap, java.util.Map<String, String> macrosMap) throws java.io.IOException
-        public virtual void loadRules(StreamReader @in, IDictionary<string, string> defsMap,
+        public virtual void LoadRules(StreamReader reader, IDictionary<string, string> definitionsMap,
             IDictionary<string, string> macrosMap)
         {
-            if (null == @in)
-            {
-                return;
-            }
-
+            Guard.NotNull(reader);
             string line;
-            while (!ReferenceEquals(line = @in.ReadLine(), null))
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
@@ -400,25 +379,28 @@ namespace NetTok.Tokenizer
                 if (firstSep == -1 || secondSep == firstSep)
                 {
                     throw new InitializationException(
-                        string.Format("missing separator in rules section line {0}", line));
+                        $"Missing separator in rules section line {line}");
                 }
 
                 var ruleName = line.Substring(0, firstSep).Trim();
-                var regExpString = line.Substring(firstSep + 1, secondSep - (firstSep + 1)).Trim();
-                var className = line.Substring(secondSep + 1).Trim();
-
-                // expand definitions
-                regExpString = ReplaceReferences(regExpString, defsMap);
-                // expand possible macros
-                regExpString = ReplaceReferences(regExpString, macrosMap);
-
-                // add rule to map
-                var regExp = Factory.createRegExp(regExpString);
-                RulesMap[ruleName] = regExp;
-                // if rule has a class, add regular expression to regular expression map
-                if (className.Length > 0)
+                var regExpString = line[(firstSep + 1)..secondSep].Trim();
+                if (secondSep + 1 >= 0 && line.Length > secondSep + 1)
                 {
-                    RegExpMap[regExp] = className;
+                    var className = line[(secondSep + 1)..].Trim();
+
+                    // expand definitions
+                    regExpString = ReplaceReferences(regExpString, definitionsMap);
+                    // expand possible macros
+                    regExpString = ReplaceReferences(regExpString, macrosMap);
+
+                    // add rule to map
+                    var regExp = Factory.createRegExp(regExpString);
+                    RulesMap[ruleName] = regExp;
+                    // if rule has a class, add regular expression to regular expression map
+                    if (className.Length > 0)
+                    {
+                        RegExpMap[regExp] = className;
+                    }
                 }
             }
         }
@@ -427,30 +409,24 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     Reads the lists section from the given reader to map each token class from the lists to a set
         ///     that contains all members of that class.
-        ///     <br>
-        ///         Immediately returns if the reader is {@code null}.
+        ///     <br />
+        ///     Immediately returns if the reader is {@code null}.
         /// </summary>
-        /// <param name="in">
+        /// <param name="reader">
         ///     the reader
         /// </param>
-        /// <param name="resourceDir">
-        ///     the resource directory
-        /// </param>
-        /// <exception cref="IOException">
+         /// <exception cref="IOException">
         ///     if there is an error during reading
         /// </exception>
         /// <exception cref="InitializationException">
         ///     if configuration fails
         /// </exception>
-        public void LoadLists(StreamReader @in, string resourceDir)
+        public void LoadLists(StreamReader reader)
         {
-            if (null == @in)
-            {
-                return;
-            }
+            Guard.NotNull(reader);
 
             string line;
-            while ((line = @in.ReadLine()) != null)
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
@@ -463,16 +439,15 @@ namespace NetTok.Tokenizer
                     break;
                 }
 
-                var sep = line.IndexOf(":", StringComparison.Ordinal);
-                if (sep == -1)
+                var separator = line.IndexOf(":", StringComparison.Ordinal);
+                if (separator == -1)
                 {
-                    throw new InitializationException(
-                        string.Format("missing separator in lists section line {0}", line));
+                    throw new InitializationException($"Missing separator in lists section line {line}");
                 }
 
-                var listFileName = line.Substring(0, sep).Trim();
-                var className = line.Substring(sep + 1).Trim();
-                LoadList(Paths.get(resourceDir).resolve(listFileName), className);
+                var listFileName = line.Substring(0, separator).Trim();
+                var className = line[(separator + 1)..].Trim();
+                LoadList(listFileName, className);
             }
         }
 
@@ -480,24 +455,19 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     Loads the abbreviations list from the given path and stores its items under the given classname
         /// </summary>
-        /// <param name="listPath">
-        ///     the abbreviations list path
-        /// </param>
-        /// <param name="className">
-        ///     the class name
-        /// </param>
+        /// <param name="listFileName">the abbreviations list path</param>
+        /// <param name="className">The class name.</param>
         /// <exception cref="IOException">
         ///     if there is an error when reading the list
         /// </exception>
-        private void LoadList(string className)
+        private void LoadList(string listFileName, string className)
         {
-            ResourceMethods.ReadResource()
-            var @in = new StreamReader(FileTools.openResourceFileAsStream(listPath), Encoding.UTF8);
+            var reader = new StreamReader(ResourceMethods.ReadResource(listFileName));
             // init set where to store the abbreviations
             var items = new HashSet<string>();
             // iterate over lines of file
             string line;
-            while ((line = @in.ReadLine()) != null)
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
                 // ignore lines starting with #
@@ -530,7 +500,7 @@ namespace NetTok.Tokenizer
                 }
             }
 
-            @in.Close();
+            reader.Close();
             // add set to lists map
             ClassMembersMap[className] = items;
         }
@@ -550,21 +520,24 @@ namespace NetTok.Tokenizer
         {
             var result = regExpString;
 
-            var references = ReferencesMatcher.getAllMatches(regExpString);
+            var references = ReferencesMatcher.GetAllMatches(regExpString);
 
-            foreach (var oneRef in references)
+            foreach (var reference in references)
             {
                 // get reference name by removing opening and closing angle brackets
-                var refName = oneRef.Image.Substring(1, oneRef.Image.Length - 1 - 1);
+                var refName = reference.Image[1..^1];
                 var refRegExpr = refMap[refName];
                 if (null == refRegExpr)
                 {
-                    throw new ProcessingException(string.Format("unknown reference {0} in regular expression {1}",
-                        refName, regExpString));
+                    throw new ProcessingException($"unknown reference {refName} in regular expression {regExpString}");
                 }
 
-                result = result.replaceFirst(oneRef.Image,
-                    string.Format("({0})", Matcher.quoteReplacement(refRegExpr)));
+
+                //result = result.replaceFirst(reference.Image,
+                //    string.Format("({0})", Matcher.quoteReplacement(refRegExpr)));
+                // ToDo - not sure exactly what the above lines do, this is my best guess:
+                var regex = new Regex(reference.Image);
+                result = regex.Replace(result, $"({refRegExpr})", 1);
             }
 
             return result;
@@ -578,7 +551,7 @@ namespace NetTok.Tokenizer
         ///     the definitions map
         /// </param>
         /// <returns> a regular expression matching all definitions </returns>
-        public static RegExp createAllRule(IDictionary<string, string> defsMap)
+        public static IRegExp createAllRule(IDictionary<string, string> defsMap)
         {
             var ruleRegExpr = new StringBuilder();
 

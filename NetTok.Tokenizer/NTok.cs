@@ -6,8 +6,7 @@ using Microsoft.Extensions.Logging;
 using NetTok.Tokenizer.Annotate;
 using NetTok.Tokenizer.Exceptions;
 using NetTok.Tokenizer.output;
-using NetTok.Tokenizer.regexp;
-using Match = NetTok.Tokenizer.regexp.Match;
+using NetTok.Tokenizer.RegExp;
 
 /*
  * NTok
@@ -278,7 +277,7 @@ namespace NetTok.Tokenizer
 
                 // use the all rule to split image in parts consisting of
                 // punctuation and non-punctuation
-                var matches = punctuationMatcher.getAllMatches(image);
+                var matches = punctuationMatcher.GetAllMatches(image);
                 // if there is no punctuation just continue
                 if (0 == matches.Count)
                 {
@@ -297,10 +296,10 @@ namespace NetTok.Tokenizer
 
                     // check if we have some non-punctuation before the current
                     // punctuation
-                    if (index != oneMatch.StartIndex)
+                    if (index != oneMatch.Index)
                     {
                         // check for internal punctuation:
-                        if (internalMatcher.matches(oneMatch.Image))
+                        if (internalMatcher.Matches(oneMatch.Value))
                         {
                             // punctuation is internal;
                             // check for right context
@@ -313,25 +312,23 @@ namespace NetTok.Tokenizer
 
                         // we have a breaking punctuation; create token for
                         // non-punctuation before the current punctuation
-                        Annotate(input, ClassAnnotation, tokClass, tokenStart + index, tokenStart + oneMatch.StartIndex,
-                            image[index..oneMatch.StartIndex], resource);
-                        index = oneMatch.StartIndex;
+                        Annotate(input, ClassAnnotation, tokClass, tokenStart + index, tokenStart + oneMatch.Index,
+                            image[index..oneMatch.Index], resource);
+                        index = oneMatch.Index;
                     }
 
                     // punctuation is not internal:
                     // get the class of the punctuation and create token for it
                     var punctuationClass = IdentifyPunctuationClass(oneMatch, null, image, resource);
-                    input.Annotate(ClassAnnotation, punctuationClass, tokenStart + index,
-                        tokenStart + oneMatch.EndIndex);
-                    index = oneMatch.EndIndex;
+                    input.Annotate(ClassAnnotation, punctuationClass, tokenStart + index, tokenStart + oneMatch.Index);
+                    index = oneMatch.EndIndex();
                 }
 
                 // cleanup after all matches have been processed
                 if (index != image.Length)
                 {
                     // create a token from rest of image
-                    Annotate(input, ClassAnnotation, tokClass, tokenStart + index, tokenStart + image.Length,
-                        image[index..], resource);
+                    Annotate(input, ClassAnnotation, tokClass, tokenStart + index, tokenStart + image.Length, image[index..], resource);
                 }
 
                 // set iterator to next non-whitespace token
@@ -368,14 +365,13 @@ namespace NetTok.Tokenizer
             var tokClass = (string) input.GetAnnotation(ClassAnnotation);
 
             // check for punctuation at the beginning of the token
-            var startMatch = punctuationMatcher.starts(image);
+            var startMatch = punctuationMatcher.Starts(image);
             while (null != startMatch)
             {
                 // create token for punctuation
                 var punctuationClass = IdentifyPunctuationClass(startMatch, null, image, resource);
-                input.Annotate(ClassAnnotation, punctuationClass, tokenStart + startMatch.StartIndex,
-                    tokenStart + startMatch.EndIndex);
-                tokenStart += startMatch.EndIndex;
+                input.Annotate(ClassAnnotation, punctuationClass, tokenStart + startMatch.Index, tokenStart + startMatch.EndIndex());
+                tokenStart += startMatch.EndIndex();
                 image = input.SubString(tokenStart, tokenEnd - tokenStart);
                 input.Index = tokenStart;
                 if (image.Length > 0)
@@ -389,7 +385,7 @@ namespace NetTok.Tokenizer
                         break;
                     }
 
-                    startMatch = punctuationMatcher.starts(image);
+                    startMatch = punctuationMatcher.Starts(image);
                 }
                 else
                 {
@@ -398,27 +394,25 @@ namespace NetTok.Tokenizer
             }
 
             // check for punctuation at the end of the token
-            var endMatch = punctuationMatcher.ends(image);
+            var endMatch = punctuationMatcher.Ends(image);
             while (null != endMatch)
             {
                 // create token for punctuation
                 var punctuationClass = IdentifyPunctuationClass(endMatch, null, image, resource);
-                input.Annotate(ClassAnnotation, punctuationClass, tokenStart + endMatch.StartIndex,
-                    tokenStart + endMatch.EndIndex);
-                tokenEnd = tokenStart + endMatch.StartIndex;
+                input.Annotate(ClassAnnotation, punctuationClass, tokenStart + endMatch.Index, tokenStart + endMatch.EndIndex());
+                tokenEnd = tokenStart + endMatch.Index;
                 image = input.SubString(tokenStart, tokenEnd - tokenStart);
                 if (image.Length > 0)
                 {
                     Annotate(input, ClassAnnotation, tokClass, tokenStart, tokenEnd, image, resource);
                     tokClass = (string) input.GetAnnotation(ClassAnnotation);
-                    if (!ReferenceEquals(tokClass, rootClass))
+                    if (tokClass != rootClass)
                     {
-                        // the remaining token could be matched with a non-root class,
-                        // so stop splitting punctuation
+                        // the remaining token could be matched with a non-root class, so stop splitting punctuation
                         break;
                     }
 
-                    endMatch = punctuationMatcher.ends(image);
+                    endMatch = punctuationMatcher.Ends(image);
                 }
                 else
                 {
@@ -456,14 +450,13 @@ namespace NetTok.Tokenizer
             var tokClass = (string) input.GetAnnotation(ClassAnnotation);
 
             // check for proclitics
-            var proclitic = procliticsMatcher.starts(image);
+            var proclitic = procliticsMatcher.Starts(image);
             // create token for proclitic
             while (null != proclitic)
             {
-                var identifyClass = IdentifyClass(proclitic.Image, procliticsMatcher, resource.CliticsDescription);
-                input.Annotate(ClassAnnotation, identifyClass, tokenStart + proclitic.StartIndex,
-                    tokenStart + proclitic.EndIndex);
-                tokenStart += proclitic.EndIndex;
+                var identifyClass = IdentifyClass(proclitic.Value, procliticsMatcher, resource.CliticsDescription);
+                input.Annotate(ClassAnnotation, identifyClass, tokenStart + proclitic.Index, tokenStart + proclitic.EndIndex());
+                tokenStart += proclitic.EndIndex();
                 image = input.SubString(tokenStart, tokenEnd - tokenStart);
                 input.Index = tokenStart;
                 if (image.Length > 0)
@@ -477,7 +470,7 @@ namespace NetTok.Tokenizer
                         break;
                     }
 
-                    proclitic = procliticsMatcher.starts(image);
+                    proclitic = procliticsMatcher.Starts(image);
                 }
                 else
                 {
@@ -486,14 +479,13 @@ namespace NetTok.Tokenizer
             }
 
             // check for enclitics
-            var enclitic = encliticsMatcher.ends(image);
+            var enclitic = encliticsMatcher.Ends(image);
             while (null != enclitic)
             {
                 // create tokens for enclitic
-                var cliticClass = IdentifyClass(enclitic.Image, encliticsMatcher, resource.CliticsDescription);
-                input.Annotate(ClassAnnotation, cliticClass, tokenStart + enclitic.StartIndex,
-                    tokenStart + enclitic.EndIndex);
-                tokenEnd = tokenStart + enclitic.StartIndex;
+                var cliticClass = IdentifyClass(enclitic.Value, encliticsMatcher, resource.CliticsDescription);
+                input.Annotate(ClassAnnotation, cliticClass, tokenStart + enclitic.Index, tokenStart + enclitic.EndIndex());
+                tokenEnd = tokenStart + enclitic.Index;
                 image = input.SubString(tokenStart, tokenEnd - tokenStart);
                 if (image.Length > 0)
                 {
@@ -506,7 +498,7 @@ namespace NetTok.Tokenizer
                         break;
                     }
 
-                    enclitic = encliticsMatcher.ends(image);
+                    enclitic = encliticsMatcher.Ends(image);
                 }
                 else
                 {
@@ -537,12 +529,12 @@ namespace NetTok.Tokenizer
         {
             if (i >= matches.Count - 1)
             {
-                return oneMatch.EndIndex != image.Length;
+                return oneMatch.EndIndex() != image.Length;
             }
 
             // there is another punctuation later in the image
             var nextMatch = matches[i + 1];
-            return nextMatch.StartIndex != oneMatch.EndIndex;
+            return nextMatch.Index != oneMatch.EndIndex();
         }
 
 
@@ -577,7 +569,7 @@ namespace NetTok.Tokenizer
             // get matcher needed for token classes recognition
             var allClassesMatcher = resource.AllClassesMatcher;
 
-            if (allClassesMatcher.matches(image))
+            if (allClassesMatcher.Matches(image))
             {
                 var tokenClass = IdentifyClass(image, allClassesMatcher, resource.ClassesDescription);
                 input.Annotate(key, tokenClass, beginIndex, endIndex);
@@ -609,22 +601,22 @@ namespace NetTok.Tokenizer
         /// <exception cref="ProcessingException">
         ///     if class of punctuation can't be identified
         /// </exception>
-        private static string IdentifyPunctuationClass(Match punctuation, RegExp regExp, string image,
+        private static string IdentifyPunctuationClass(Match punctuation, IRegExp regExp, string image,
             LanguageResource resource)
         {
-            var oneClass = IdentifyClass(punctuation.Image, regExp, resource.PunctuationDescription);
+            var oneClass = IdentifyClass(punctuation.Value, regExp, resource.PunctuationDescription);
             // check if we have an ambiguous open/close punctuation; if
             // yes, resolve it
             if (resource.IsAncestor(PunctDescription.OPEN_CLOSE_PUNCT, oneClass))
             {
-                var nextIndex = punctuation.EndIndex;
+                var nextIndex = punctuation.EndIndex();
                 if (nextIndex >= image.Length || !char.IsLetter(image[nextIndex]))
                 {
                     oneClass = PunctDescription.CLOSE_PUNCT;
                 }
                 else
                 {
-                    var prevIndex = punctuation.StartIndex - 1;
+                    var prevIndex = punctuation.Index - 1;
                     if (prevIndex < 0 || !char.IsLetter(image[prevIndex]))
                     {
                         oneClass = PunctDescription.OPEN_PUNCT;
@@ -712,7 +704,7 @@ namespace NetTok.Tokenizer
                     }
 
                     // check if token is matched by abbreviation matcher
-                    if (!allAbbrevMatcher.matches(image))
+                    if (!allAbbrevMatcher.Matches(image))
                     {
                         continue;
                     }
@@ -774,7 +766,7 @@ namespace NetTok.Tokenizer
                         {
                             // do nothing
                         }
-                        else if (char.IsLower(c) || internalTuMatcher.matches(input.SubString(input.Index, 1)))
+                        else if (char.IsLower(c) || internalTuMatcher.Matches(input.SubString(input.Index, 1)))
                         {
                             // if we find a lower case letter or a punctuation that can
                             // only appear within a text unit, it was wrong alert, the
@@ -818,7 +810,7 @@ namespace NetTok.Tokenizer
                         {
                             eosMode = true;
                         }
-                        else if (resource.IsAncestor(AbbrevDescription.B_ABBREVIATION,
+                        else if (resource.IsAncestor(AbbreviationDescription.BAbbreviation,
                             (string) input.GetAnnotation(ClassAnnotation)))
                         {
                             // check if token is a breaking abbreviation
@@ -913,12 +905,12 @@ namespace NetTok.Tokenizer
         /// <exception cref="ProcessingException">
         ///     if class of string can't be identified
         /// </exception>
-        private static string IdentifyClass(string s, RegExp regExp, Description description)
+        private static string IdentifyClass(string s, IRegExp regExp, Description description)
         {
             // first try to identify class via the regular expression
             if (null != regExp)
             {
-                IDictionary<RegExp, string> regExpMap = description.RegExpMap;
+                IDictionary<IRegExp, string> regExpMap = description.RegExpMap;
                 var oneClass = regExpMap[regExp];
                 if (null != oneClass)
                 {
@@ -927,14 +919,14 @@ namespace NetTok.Tokenizer
             }
 
             // get hash map with classes
-            IDictionary<string, RegExp> definitionsMap = description.DefinitionsMap;
+            IDictionary<string, IRegExp> definitionsMap = description.DefinitionsMap;
             // iterate over classes
             foreach (var oneEntry in definitionsMap)
             {
                 // check if string is of that class
                 var oneClass = oneEntry.Key;
                 var oneRe = oneEntry.Value;
-                if (oneRe.matches(s))
+                if (oneRe.Matches(s))
                 {
                     // return class name
                     return oneClass;
@@ -992,7 +984,7 @@ namespace NetTok.Tokenizer
                 var result = testTok.Tokenize(text, args[1]);
 
                 // print result
-                foreach (var onePara in Outputter.createParagraphs(result))
+                foreach (var onePara in Outputter.CreateParagraphs(result))
                 {
                     Console.WriteLine(onePara);
                 }

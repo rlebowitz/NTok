@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30803.129
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTok.Tokenizer", "NetTok.Tokenizer\NetTok.Tokenizer.csproj", "{F36EEA4D-E7F6-4A93-B5DB-98EA01986967}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetTok.Tokenizer", "NetTok.Tokenizer\NetTok.Tokenizer.csproj", "{F36EEA4D-E7F6-4A93-B5DB-98EA01986967}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetTok.Tests.Integration", "NetTok.Tests.Integration\NetTok.Tests.Integration.csproj", "{F2D09895-0E44-4ECA-B177-0903BDE09453}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A0CF9679-CC57-4D40-AA9F-07CFC5AF8472}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +19,16 @@ Global
 		{F36EEA4D-E7F6-4A93-B5DB-98EA01986967}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F36EEA4D-E7F6-4A93-B5DB-98EA01986967}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F36EEA4D-E7F6-4A93-B5DB-98EA01986967}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2D09895-0E44-4ECA-B177-0903BDE09453}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2D09895-0E44-4ECA-B177-0903BDE09453}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2D09895-0E44-4ECA-B177-0903BDE09453}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2D09895-0E44-4ECA-B177-0903BDE09453}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F2D09895-0E44-4ECA-B177-0903BDE09453} = {A0CF9679-CC57-4D40-AA9F-07CFC5AF8472}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {91F56F87-BD17-4888-B4BD-92889248C396}

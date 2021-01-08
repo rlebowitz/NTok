@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Xml.Linq;
 using NetTok.Tokenizer.Exceptions;
-using NetTok.Tokenizer.regexp;
+using NetTok.Tokenizer.RegExp;
 
 /*
  * NTok
@@ -87,7 +87,7 @@ namespace NetTok.Tokenizer
                 CliticsDescription = new CliticsDescription(resourceDir, language, macrosMap);
 
                 // load abbreviation description
-                AbbreviationDescription = new AbbrevDescription(resourceDir, language, macrosMap);
+                AbbreviationDescription = new AbbreviationDescription(resourceDir, language, macrosMap);
 
                 // load token classes description document
                 this.ClassseDescr = new TokenClassesDescription(resourceDir, language, macrosMap);
@@ -115,29 +115,29 @@ namespace NetTok.Tokenizer
         public IDictionary<string, List<string>> AncestorsMap { get; set; }
         public PunctDescription PunctuationDescription { get; set; }
         public CliticsDescription CliticsDescription { get; set; }
-        public AbbrevDescription AbbreviationDescription { get; set; }
+        public AbbreviationDescription AbbreviationDescription { get; set; }
         public TokenClassesDescription ClassesDescription { get; set; }
 
         /// <summary>
         ///     The Regular Expression matcher for all punctuation from the punctuation description.
         /// </summary>
-        public RegExp AllPunctuationMatcher => PunctuationDescription.RulesMap[PunctDescription.ALL_RULE];
+        public IRegExp AllPunctuationMatcher => PunctuationDescription.RulesMap[PunctDescription.ALL_RULE];
 
 
         /// <summary>The matcher for internal punctuation from the punctuation description.</summary>
-        public RegExp InternalMatcher => PunctuationDescription.RulesMap[PunctDescription.INTERNAL_RULE];
+        public IRegExp InternalMatcher => PunctuationDescription.RulesMap[PunctDescription.INTERNAL_RULE];
 
 
         /// <summary>The matcher for sentence internal punctuation from the punctuation description.</summary>
-        public RegExp InternalTuMatcher => PunctuationDescription.RulesMap[PunctDescription.INTERNAL_TU_RULE];
+        public IRegExp InternalTuMatcher => PunctuationDescription.RulesMap[PunctDescription.INTERNAL_TU_RULE];
 
 
         /// <summary>The matcher for pro-clitics from the clitics description.</summary>
-        public RegExp ProcliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.PROCLITIC_RULE];
+        public IRegExp ProcliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.PROCLITIC_RULE];
 
 
         /// <summary>The matcher for enclitics from the clitics description.</summary>
-        public RegExp EncliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.ENCLITIC_RULE];
+        public IRegExp EncliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.ENCLITIC_RULE];
 
 
         /// <summary>The map with the abbreviation lists.</summary>
@@ -145,7 +145,7 @@ namespace NetTok.Tokenizer
 
 
         /// <summary>The matcher for the all abbreviations from the abbreviations description.</summary>
-        public RegExp AllAbbreviationMatcher => AbbreviationDescription.RulesMap[AbbrevDescription.ALL_RULE];
+        public IRegExp AllAbbreviationMatcher => AbbreviationDescription.RulesMap[AbbreviationDescription.AllRule];
 
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace NetTok.Tokenizer
 
 
         /// <summary> the matcher for all token classes from the token classes description </summary>
-        public RegExp AllClassesMatcher => ClassesDescription.RulesMap[TokenClassesDescription.ALL_RULE];
+        public IRegExp AllClassesMatcher => ClassesDescription.RulesMap[TokenClassesDescription.ALL_RULE];
 
         /// <summary>
         ///     Iterates recursively over a list of class elements and adds each element's ancestors to

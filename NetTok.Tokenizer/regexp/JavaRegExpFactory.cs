@@ -20,15 +20,15 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.regexp
+namespace NetTok.Tokenizer.RegExp
 {
 
-	/// <summary>
-	/// Extends <seealso cref="RegExpFactory"/> for regular expressions of the java.util.regex package.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class JavaRegExpFactory : RegExpFactory
+    /// <summary>
+    /// Extends <seealso cref="RegExpFactory"/> for regular expressions of the java.util.regex package.
+    /// 
+    /// @author Joerg Steffen, DFKI
+    /// </summary>
+    public class JavaRegExpFactory : RegExpFactory
 	{
 
 	  /// <summary>
@@ -44,7 +44,7 @@ namespace NetTok.Tokenizer.regexp
 	  /// <summary>
 	  /// {@inheritDoc}
 	  /// </summary>
-	  public override RegExp createRegExp(string regExpString)
+	  public override IRegExp createRegExp(string regExpString)
 	  {
 
 		return new JavaRegExp(regExpString);

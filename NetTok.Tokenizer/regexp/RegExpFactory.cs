@@ -22,16 +22,16 @@
 
 using NetTok.Tokenizer.Exceptions;
 
-namespace NetTok.Tokenizer.regexp
+namespace NetTok.Tokenizer.RegExp
 {
-	using InitializationException = InitializationException;
+    using InitializationException = InitializationException;
 
-	/// <summary>
-	/// Abstract class for creating objects that fit the <seealso cref="RegExp"/> interface.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public abstract class RegExpFactory
+    /// <summary>
+    /// Abstract class for creating objects that fit the <seealso cref="IRegExp"/> interface.
+    /// 
+    /// @author Joerg Steffen, DFKI
+    /// </summary>
+    public abstract class RegExpFactory
 	{
 
 	  /// <summary>
@@ -42,7 +42,7 @@ namespace NetTok.Tokenizer.regexp
 	  /// <returns> a regular expression build from the regular expression string </returns>
 	  /// <exception cref="InitializationException">
 	  ///              if regular expression is not well formed </exception>
-	  public abstract RegExp createRegExp(string regExpString);
+	  public abstract IRegExp createRegExp(string regExpString);
 	}
 
 }

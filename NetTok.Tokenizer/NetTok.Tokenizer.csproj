@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="RegExp\Match.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="resources\default\default_abbrev.cfg" />
     <None Remove="resources\default\default_classes.cfg" />
     <None Remove="resources\default\default_class_hierarchy.xml" />

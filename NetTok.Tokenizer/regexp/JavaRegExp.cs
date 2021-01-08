@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using NetTok.Tokenizer.Exceptions;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 /*
  * JTok
@@ -23,139 +24,79 @@ using NetTok.Tokenizer.Exceptions;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.regexp
+namespace NetTok.Tokenizer.RegExp
 {
-
-	using InitializationException = InitializationException;
-
-	/// <summary>
-	/// Implements the <seealso cref="RegExp"/> interface for regular expressions of the java.util.regex package.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class JavaRegExp : RegExp
-	{
-
-	  // instance of a regular expression in the java.util.regex package
-	  private Pattern re;
+    /// <summary>
+    ///     Implements the <seealso cref="IRegExp" /> interface for regular expressions of the java.util.regex package.
+    ///     @author Joerg Steffen, DFKI
+    /// </summary>
+    public class JavaRegExp : IRegExp
+    {
+        // instance of a regular expression in the java.util.regex package
+        private readonly Regex regex;
 
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="JavaRegExp"/> for the given regular expression string.
-	  /// </summary>
-	  /// <param name="regExpString">
-	  ///          a regular expression string </param>
-	  /// <exception cref="InitializationException">
-	  ///              if regular expression is not well formed </exception>
-	  public JavaRegExp(string regExpString)
-	  {
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="JavaRegExp" /> for the given regular expression string.
+        /// </summary>
+        /// <param name="regExpString">A regular expression string.</param>
+        public JavaRegExp(string regExpString)
+        {
+            Guard.NotNull(regExpString);
+            regex = new Regex(regExpString, RegexOptions.Compiled);
+        }
 
-		try
-		{
-		  this.re = Pattern.compile(regExpString);
-		}
-		catch (PatternSyntaxException pse)
-		{
-		  throw new InitializationException(pse.LocalizedMessage, pse);
-		}
-	  }
+        //https://stackoverflow.com/questions/12730251/convert-result-of-matches-from-regex-into-list-of-string
+        public virtual List<Match> GetAllMatches(string input)
+        {
+            var matches = regex.Matches(input);
+            return matches.Select(match => match).ToList();
+        }
 
+        public virtual bool Matches(string input)
+        {
+            return regex.IsMatch(input);
+        }
 
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual IList<Match> getAllMatches(string input)
-	  {
+        public virtual Match Contains(string input)
+        {
+            if (regex.IsMatch(input))
+            {
+                return regex.Match(input);
+            }
 
-		// create Matcher for input
-		Matcher matcher = this.re.matcher(input);
-		// convert matches and collect them in a list
-		IList<Match> matches = new List<Match>();
-		while (matcher.find())
-		{
-		  matches.Add(new Match(matcher.start(), matcher.end(), matcher.group()));
-		}
-		// return result
-		return matches;
-	  }
+            return null;
+        }
 
+        public virtual Match Starts(string input)
+        {
+            if (!regex.IsMatch(input))
+            {
+                return null;
+            }
 
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual bool matches(string input)
-	  {
+            var match = regex.Match(input);
+            return match.Index == 0 ? match : null;
+        }
 
-		// create Matcher for input
-		Matcher matcher = this.re.matcher(input);
-		return matcher.matches();
-	  }
+        public virtual Match Ends(string input)
+        {
+            if (regex.IsMatch(input))
+            {
+                var matches = regex.Matches(input);
+                var lastMatch = matches.Last();
+                if (lastMatch.Index == input.Length - lastMatch.Length)
+                {
+                    return lastMatch;
+                }
+            }
 
+            return null;
+        }
 
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual Match contains(string input)
-	  {
-
-		// create Matcher for input
-		Matcher matcher = this.re.matcher(input);
-		if (matcher.find())
-		{
-		  return new Match(matcher.start(), matcher.end(), matcher.group());
-		}
-
-		return null;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual Match starts(string input)
-	  {
-
-		// create Matcher for input
-		Matcher matcher = this.re.matcher(input);
-		if (matcher.find() && matcher.start() == 0)
-		{
-		  return new Match(matcher.start(), matcher.end(), matcher.group());
-		}
-
-		return null;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public virtual Match ends(string input)
-	  {
-
-		// create Matcher for input
-		Matcher matcher = this.re.matcher(input);
-		// get the last match
-		Match match = null;
-		while (matcher.find())
-		{
-		  match = new Match(matcher.start(), matcher.end(), matcher.group());
-		}
-		if (match != null && match.EndIndex == input.Length)
-		{
-		  return match;
-		}
-		return null;
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override string ToString()
-	  {
-
-		return this.re.ToString();
-	  }
-	}
-
+        public override string ToString()
+        {
+            return regex.ToString();
+        }
+    }
 }

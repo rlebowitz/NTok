@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace NetTok.Tokenizer
@@ -22,6 +23,11 @@ namespace NetTok.Tokenizer
         public static string TagName(this XElement element)
         {
             return element.Name.LocalName;
+        }
+
+        public static int EndIndex(this Match match)
+        {
+            return match.Index + match.Length;
         }
     }
 }

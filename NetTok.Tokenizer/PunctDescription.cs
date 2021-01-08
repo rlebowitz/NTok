@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using NetTok.Tokenizer.regexp;
+using NetTok.Tokenizer.RegExp;
 
 /*
  * JTok
@@ -27,10 +27,7 @@ using NetTok.Tokenizer.regexp;
 
 namespace NetTok.Tokenizer
 {
-
-	using RegExp = RegExp;
-
-	/// <summary>
+    /// <summary>
 	/// Manages the content of a punctuation description file.
 	/// 
 	/// @author Joerg Steffen, DFKI
@@ -99,9 +96,9 @@ namespace NetTok.Tokenizer
 	  public PunctDescription(string resourceDir, string lang, IDictionary<string, string> macrosMap)
 	  {
 
-		base.DefinitionsMap = new Dictionary<string, RegExp>();
-		base.RulesMap = new Dictionary<string, RegExp>();
-		base.RegExpMap = new Dictionary<RegExp, string>();
+		base.DefinitionsMap = new Dictionary<string, IRegExp>();
+		base.RulesMap = new Dictionary<string, IRegExp>();
+		base.RegExpMap = new Dictionary<IRegExp, string>();
 
 		Path punctDescrPath = Paths.get(resourceDir).resolve(lang + PUNCT_DESCR);
 		StreamReader @in = new StreamReader(FileTools.openResourceFileAsStream(punctDescrPath), Encoding.UTF8);
@@ -115,7 +112,7 @@ namespace NetTok.Tokenizer
 
 		// when loadDefinitions returns the reader has reached the rules section;
 		// read rules
-		base.loadRules(@in, defsMap, macrosMap);
+		base.LoadRules(@in, defsMap, macrosMap);
 
 		RulesMap[ALL_RULE] = createAllRule(defsMap);
 
