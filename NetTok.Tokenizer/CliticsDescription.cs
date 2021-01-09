@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using NetTok.Tokenizer.RegExp;
+using System.Text.RegularExpressions;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+ * NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -28,62 +30,53 @@ using NetTok.Tokenizer.RegExp;
 namespace NetTok.Tokenizer
 {
     /// <summary>
-	/// Manages the content of a clitics description file.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class CliticsDescription : Description
-	{
+    ///     Manages the content of a clitics description file.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class CliticsDescription : Description
+    {
+        /// <summary>
+        ///     Name of the proclitic rule.
+        /// </summary>
+        protected internal const string ProcliticRule = "PROCLITIC_RULE";
 
-	  /// <summary>
-	  /// name of the proclitic rule </summary>
-	  protected internal const string PROCLITIC_RULE = "PROCLITIC_RULE";
+        /// <summary>
+        ///     name of the enclitic rule
+        /// </summary>
+        protected internal const string EncliticRule = "ENCLITIC_RULE";
 
-	  /// <summary>
-	  /// name of the enclitic rule </summary>
-	  protected internal const string ENCLITIC_RULE = "ENCLITIC_RULE";
-
-
-	  // name suffix of the resource file with the clitic description
-	  private const string CLITIC_DESCR = "_clitics.cfg";
+        // name suffix of the resource file with the clitic description
+        private const string CliticDescriptionSuffix = "_clitics.cfg";
 
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="CliticsDescription"/> for the given language.
-	  /// </summary>
-	  /// <param name="resourceDir">
-	  ///          path to the folder with the language resources </param>
-	  /// <param name="lang">
-	  ///          the language </param>
-	  /// <param name="macrosMap">
-	  ///          a map of macro names to regular expression strings </param>
-	  /// <exception cref="IOException">
-	  ///           if there is an error when reading the configuration </exception>
-//JAVA TO C# CONVERTER WARNING: Method 'throws' clauses are not available in C#:
-//ORIGINAL LINE: public CliticsDescription(String resourceDir, String lang, java.util.Map<String, String> macrosMap) throws java.io.IOException
-	  public CliticsDescription(string resourceDir, string lang, IDictionary<string, string> macrosMap)
-	  {
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="CliticsDescription" /> for the given language.
+        /// </summary>
+        /// <param name="language">
+        ///     the language
+        /// </param>
+        /// <param name="macrosMap">
+        ///     a map of macro names to regular expression strings
+        /// </param>
+        /// <exception cref="IOException">
+        ///     if there is an error when reading the configuration
+        /// </exception>
+        public CliticsDescription(string language, IDictionary<string, string> macrosMap)
+        {
+            DefinitionsMap = new Dictionary<string, Regex>();
+            RulesMap = new Dictionary<string, Regex>();
+            RegExpMap = new Dictionary<Regex, string>();
 
-		base.DefinitionsMap = new Dictionary<string, IRegExp>();
-		base.RulesMap = new Dictionary<string, IRegExp>();
-		base.RegExpMap = new Dictionary<IRegExp, string>();
+            using var stream = ResourceMethods.ReadResource(language, CliticDescriptionSuffix);
+            using var reader = new StreamReader(stream);
 
-		Path clitDescrPath = Paths.get(resourceDir).resolve(lang + CLITIC_DESCR);
-		StreamReader @in = new StreamReader(FileTools.openResourceFileAsStream(clitDescrPath), Encoding.UTF8);
-
-		// read config file to definitions start
-		ReadToDefinitions(@in);
-
-		// read definitions
-		IDictionary<string, string> defsMap = new Dictionary<string, string>();
-		base.LoadDefinitions(@in, macrosMap, defsMap);
-
-		// when loadDefinitions returns the reader has reached the rules section;
-		// read rules
-		base.LoadRules(@in, defsMap, macrosMap);
-
-		@in.Close();
-	  }
-	}
-
+            // read config file to definitions start
+            ReadToDefinitions(reader);
+            // read definitions
+            IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
+            base.LoadDefinitions(reader, macrosMap, definitionsMap);
+            // when loadDefinitions returns the reader has reached the rules section; read rules
+            base.LoadRules(reader, definitionsMap, macrosMap);
+        }
+    }
 }

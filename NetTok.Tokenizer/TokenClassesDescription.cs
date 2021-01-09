@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using NetTok.Tokenizer.RegExp;
+using System.Text.RegularExpressions;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+ * NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -28,56 +30,41 @@ using NetTok.Tokenizer.RegExp;
 namespace NetTok.Tokenizer
 {
     /// <summary>
-	/// Manages the content of a token classes description file.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class TokenClassesDescription : Description
-	{
-
-	  /// <summary>
-	  /// name of the all classes rule </summary>
-	  protected internal const string ALL_RULE = "ALL_CLASSES_RULE";
-
-
-	  // name suffix of the resource file with the token classes description
-	  private const string CLASS_DESCR = "_classes.cfg";
+    ///     Manages the content of a token classes description file.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class TokenClassesDescription : Description
+    {
+        /// <summary>
+        ///     name of the all classes rule
+        /// </summary>
+        protected internal const string AllRule = "ALL_CLASSES_RULE";
 
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="TokenClassesDescription"/> for the given language.
-	  /// </summary>
-	  /// <param name="resourceDir">
-	  ///          path to the folder with the language resources </param>
-	  /// <param name="lang">
-	  ///          the language </param>
-	  /// <param name="macrosMap">
-	  ///          a map of macro names to regular expression strings </param>
-	  /// <exception cref="IOException">
-	  ///           if there is an error when reading the configuration </exception>
-//JAVA TO C# CONVERTER WARNING: Method 'throws' clauses are not available in C#:
-//ORIGINAL LINE: public TokenClassesDescription(String resourceDir, String lang, java.util.Map<String, String> macrosMap) throws java.io.IOException
-	  public TokenClassesDescription(string resourceDir, string lang, IDictionary<string, string> macrosMap)
-	  {
+        // name suffix of the resource file with the token classes description
+        private const string ClassDescription = "_classes.cfg";
 
-		base.DefinitionsMap = new Dictionary<string, IRegExp>();
-		base.RulesMap = new Dictionary<string, IRegExp>();
-		base.RegExpMap = new Dictionary<IRegExp, string>();
 
-		Path tokClassesDescrPath = Paths.get(resourceDir).resolve(lang + CLASS_DESCR);
-		StreamReader @in = new StreamReader(FileTools.openResourceFileAsStream(tokClassesDescrPath), Encoding.UTF8);
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="TokenClassesDescription" /> for the given language.
+        /// </summary>
+        /// <param name="language">The specified language.</param>
+        /// <param name="macrosMap">A map of macro names to regular expression strings.</param>
+        /// <exception cref="IOException">If there is an error when reading the configuration.</exception>
+        public TokenClassesDescription(string language, IDictionary<string, string> macrosMap)
+        {
+            DefinitionsMap = new Dictionary<string, Regex>();
+            RulesMap = new Dictionary<string, Regex>();
+            RegExpMap = new Dictionary<Regex, string>();
 
-		// read config file to definitions start
-		ReadToDefinitions(@in);
-
-		// read definitions
-		IDictionary<string, string> defsMap = new Dictionary<string, string>();
-		base.LoadDefinitions(@in, macrosMap, defsMap);
-
-		RulesMap[ALL_RULE] = createAllRule(defsMap);
-
-		@in.Close();
-	  }
-	}
-
+            using var stream = ResourceMethods.ReadResource(language, ClassDescription);
+            using var reader = new StreamReader(stream);
+            // read config file to definitions start
+            ReadToDefinitions(reader);
+            // read definitions
+            IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
+            base.LoadDefinitions(reader, macrosMap, definitionsMap);
+            RulesMap[AllRule] = CreateAllRule(definitionsMap);
+        }
+    }
 }

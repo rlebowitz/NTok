@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NetTok.Tokenizer.Exceptions;
-using NetTok.Tokenizer.RegExp;
 
 /*
  * NTok
@@ -70,35 +69,31 @@ namespace NetTok.Tokenizer
             {
                 // load classes hierarchy
                 using var stream = ResourceMethods.ReadResource(language, ClassesHierarchy);
-                XDocument document = XDocument.Parse(stream);
+                var document = XDocument.Parse(new StreamReader(stream).ReadToEnd());
                 // set hierarchy root
                 ClassesRoot = document.Root;
                 // map class names to dom elements
                 MapSingleClass(ClassesRoot);
                 MapClasses(ClassesRoot.Elements().ToList());
                 // load macros
-                Dictionary<string, string> macrosMap = new Dictionary<string, string>();
+                var macrosMap = new Dictionary<string, string>();
                 Description.LoadMacros(Language, MacrosConfiguration, macrosMap);
 
                 // load punctuation description
-                PunctuationDescription = new PunctDescription(resourceDir, language, macrosMap);
+                PunctuationDescription = new PunctuationDescription(language, macrosMap);
 
                 // load clitics description
-                CliticsDescription = new CliticsDescription(resourceDir, language, macrosMap);
+                CliticsDescription = new CliticsDescription(language, macrosMap);
 
                 // load abbreviation description
-                AbbreviationDescription = new AbbreviationDescription(resourceDir, language, macrosMap);
+                AbbreviationDescription = new AbbreviationDescription(language, macrosMap);
 
                 // load token classes description document
-                this.ClassseDescr = new TokenClassesDescription(resourceDir, language, macrosMap);
-            }
-            catch (SAXException spe)
-            {
-                throw new InitializationException(spe.LocalizedMessage, spe);
+                ClassesDescription = new TokenClassesDescription(language, macrosMap);
             }
             catch (IOException ioe)
             {
-                throw new InitializationException(ioe.LocalizedMessage, ioe);
+                throw new InitializationException(ioe.Message, ioe);
             }
         }
 
@@ -113,7 +108,7 @@ namespace NetTok.Tokenizer
         public string Language { get; }
         public XElement ClassesRoot { get; set; }
         public IDictionary<string, List<string>> AncestorsMap { get; set; }
-        public PunctDescription PunctuationDescription { get; set; }
+        public PunctuationDescription PunctuationDescription { get; set; }
         public CliticsDescription CliticsDescription { get; set; }
         public AbbreviationDescription AbbreviationDescription { get; set; }
         public TokenClassesDescription ClassesDescription { get; set; }
@@ -121,42 +116,34 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     The Regular Expression matcher for all punctuation from the punctuation description.
         /// </summary>
-        public IRegExp AllPunctuationMatcher => PunctuationDescription.RulesMap[PunctDescription.ALL_RULE];
-
+        public Regex AllPunctuationMatcher => PunctuationDescription.RulesMap[PunctuationDescription.AllRule];
 
         /// <summary>The matcher for internal punctuation from the punctuation description.</summary>
-        public IRegExp InternalMatcher => PunctuationDescription.RulesMap[PunctDescription.INTERNAL_RULE];
-
+        public Regex InternalMatcher => PunctuationDescription.RulesMap[PunctuationDescription.InternalRule];
 
         /// <summary>The matcher for sentence internal punctuation from the punctuation description.</summary>
-        public IRegExp InternalTuMatcher => PunctuationDescription.RulesMap[PunctDescription.INTERNAL_TU_RULE];
-
+        public Regex InternalTuMatcher => PunctuationDescription.RulesMap[PunctuationDescription.InternalTuRule];
 
         /// <summary>The matcher for pro-clitics from the clitics description.</summary>
-        public IRegExp ProcliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.PROCLITIC_RULE];
-
+        public Regex ProcliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.ProcliticRule];
 
         /// <summary>The matcher for enclitics from the clitics description.</summary>
-        public IRegExp EncliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.ENCLITIC_RULE];
-
+        public Regex EncliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.EncliticRule];
 
         /// <summary>The map with the abbreviation lists.</summary>
         public IDictionary<string, HashSet<string>> AbbreviationLists => AbbreviationDescription.ClassMembersMap;
 
-
         /// <summary>The matcher for the all abbreviations from the abbreviations description.</summary>
-        public IRegExp AllAbbreviationMatcher => AbbreviationDescription.RulesMap[AbbreviationDescription.AllRule];
-
+        public Regex AllAbbreviationMatcher => AbbreviationDescription.RulesMap[AbbreviationDescription.AllRule];
 
         /// <summary>
-        ///     The set of the most common terms that only start with a capital letter when they are at the beginning of a
-        ///     sentence
+        ///     The set of the most common terms that only start with a capital letter when they are at the beginning of a sentence
         /// </summary>
         public HashSet<string> NonCapitalizedTerms => AbbreviationDescription.NonCapTerms;
 
 
         /// <summary> the matcher for all token classes from the token classes description </summary>
-        public IRegExp AllClassesMatcher => ClassesDescription.RulesMap[TokenClassesDescription.ALL_RULE];
+        public Regex AllClassesMatcher => ClassesDescription.RulesMap[TokenClassesDescription.AllRule];
 
         /// <summary>
         ///     Iterates recursively over a list of class elements and adds each element's ancestors to

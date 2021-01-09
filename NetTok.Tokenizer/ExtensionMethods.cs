@@ -29,5 +29,37 @@ namespace NetTok.Tokenizer
         {
             return match.Index + match.Length;
         }
+
+        public static List<Match> GetAllMatches(this Regex regex, string input)
+        {
+            var matches = regex.Matches(input);
+            return matches.Select(match => match).ToList();
+        }
+
+        public static Match Starts(this Regex regex, string input)
+        {
+            if (!regex.IsMatch(input))
+            {
+                return null;
+            }
+
+            var match = regex.Match(input);
+            return match.Index == 0 ? match : null;
+        }
+
+        public static Match Ends(this Regex regex, string input)
+        {
+            if (regex.IsMatch(input))
+            {
+                var matches = regex.Matches(input);
+                var lastMatch = matches.Last();
+                if (lastMatch.Index == input.Length - lastMatch.Length)
+                {
+                    return lastMatch;
+                }
+            }
+
+            return null;
+        }
     }
 }

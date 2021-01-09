@@ -7,6 +7,50 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\english\amazon-coleman.txt" />
+    <None Remove="Resources\english\english.txt" />
+    <None Remove="Resources\english\randomhouse-hertsgaard.txt" />
+    <None Remove="Resources\expected-results\annotated-string-expected-1.txt" />
+    <None Remove="Resources\expected-results\annotated-string-expected-2.txt" />
+    <None Remove="Resources\expected-results\english\amazon-coleman-expected.txt" />
+    <None Remove="Resources\expected-results\english\english-expected.txt" />
+    <None Remove="Resources\expected-results\english\randomhouse-hertsgaard-expected.txt" />
+    <None Remove="Resources\expected-results\german\amazon-expected.txt" />
+    <None Remove="Resources\expected-results\german\german-expected.txt" />
+    <None Remove="Resources\german\amazon.txt" />
+    <None Remove="Resources\german\german.txt" />
+    <None Remove="Resources\test\cliticsTest.txt" />
+    <None Remove="Resources\test\misc.txt" />
+    <None Remove="Resources\test\numbersTest.txt" />
+    <None Remove="Resources\test\paragraphTest.txt" />
+    <None Remove="Resources\test\punctuationTest.txt" />
+    <None Remove="Resources\test\specialCharactersTest.txt" />
+    <None Remove="Resources\test\tuTest.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\english\amazon-coleman.txt" />
+    <EmbeddedResource Include="Resources\english\english.txt" />
+    <EmbeddedResource Include="Resources\english\randomhouse-hertsgaard.txt" />
+    <EmbeddedResource Include="Resources\expected-results\annotated-string-expected-1.txt" />
+    <EmbeddedResource Include="Resources\expected-results\annotated-string-expected-2.txt" />
+    <EmbeddedResource Include="Resources\expected-results\english\amazon-coleman-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\english\english-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\english\randomhouse-hertsgaard-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\german\amazon-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\german\german-expected.txt" />
+    <EmbeddedResource Include="Resources\german\amazon.txt" />
+    <EmbeddedResource Include="Resources\german\german.txt" />
+    <EmbeddedResource Include="Resources\test\cliticsTest.txt" />
+    <EmbeddedResource Include="Resources\test\misc.txt" />
+    <EmbeddedResource Include="Resources\test\numbersTest.txt" />
+    <EmbeddedResource Include="Resources\test\paragraphTest.txt" />
+    <EmbeddedResource Include="Resources\test\punctuationTest.txt" />
+    <EmbeddedResource Include="Resources\test\specialCharactersTest.txt" />
+    <EmbeddedResource Include="Resources\test\tuTest.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">

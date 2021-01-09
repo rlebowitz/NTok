@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
-using NetTok.Tokenizer.annotate;
+using System.Reflection.Metadata;
+using Microsoft.Extensions.Logging;
+using NetTok.Tokenizer.Annotate;
 using NetTok.Tokenizer.Exceptions;
 
 /*
@@ -27,14 +29,6 @@ using NetTok.Tokenizer.Exceptions;
 
 namespace NetTok.Tokenizer.output
 {
-
-
-	using Logger = org.slf4j.Logger;
-    using Document = org.w3c.dom.Document;
-	using Element = org.w3c.dom.Element;
-
-	using FileTools = FileTools;
-    using ProcessingException = ProcessingException;
 
 	/// <summary>
 	/// <seealso cref="XmlOutputter"/> provides static methods that return an XML presentation of an
@@ -92,7 +86,7 @@ namespace NetTok.Tokenizer.output
 
 	  /// <summary>
 	  /// the logger </summary>
-	  private static readonly Logger logger = LoggerFactory.getLogger(typeof(XmlOutputter));
+	  private static readonly ILogger logger = LoggerFactory.getLogger(typeof(XmlOutputter));
 
 
 	  // would create a new instance of {@link XmlOutputter}; not to be used

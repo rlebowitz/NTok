@@ -24,9 +24,7 @@
 
 namespace NetTok.Tokenizer.output
 {
-	using PunctDescription = PunctDescription;
-
-	/// <summary>
+    /// <summary>
 	/// Represents a token with its type and surface image.
 	/// 
 	/// @author Joerg Steffen, DFKI
@@ -210,7 +208,7 @@ namespace NetTok.Tokenizer.output
 
 		string result = null;
 
-		if (type.Equals(PunctDescription.OPEN_BRACKET))
+		if (type.Equals(PunctuationDescription.OpenBracket))
 		{
 
 		  if (image.Equals("("))
@@ -226,7 +224,7 @@ namespace NetTok.Tokenizer.output
 			result = LCB;
 		  }
 		}
-		else if (type.Equals(PunctDescription.CLOSE_BRACKET))
+		else if (type.Equals(PunctuationDescription.CloseBracket))
 		{
 
 		  if (image.Equals(")"))
@@ -242,11 +240,11 @@ namespace NetTok.Tokenizer.output
 			result = RCB;
 		  }
 		}
-		else if (type.Equals(PunctDescription.OPEN_PUNCT))
+		else if (type.Equals(PunctuationDescription.OpenPunct))
 		{
 		  result = "``";
 		}
-		else if (type.Equals(PunctDescription.CLOSE_PUNCT))
+		else if (type.Equals(PunctuationDescription.ClosePunct))
 		{
 		  result = "''";
 		}

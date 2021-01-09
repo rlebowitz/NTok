@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using NetTok.Tokenizer.RegExp;
+using System.Text.RegularExpressions;
 
 /*
  * NTok
@@ -37,7 +37,7 @@ namespace NetTok.Tokenizer
     public class AbbreviationDescription : Description
     {
         /// <summary>
-        ///     class name for breaking abbreviation
+        ///     Class name for breaking abbreviation
         /// </summary>
         public const string BAbbreviation = "B_ABBREVIATION";
 
@@ -46,8 +46,10 @@ namespace NetTok.Tokenizer
         /// </summary>
         protected internal const string AllRule = "ALL_RULE";
 
-        // name suffix of the resource file with the abbreviations description
-        private const string AbbrevDescription = "_abbrev.cfg";
+        /// <summary>
+        ///     name suffix of the resource file with the abbreviations description
+        /// </summary>
+        private const string AbbreviationDescriptionSuffix = "_abbrev.cfg";
 
 
         // the most common terms that only start with a capital letter when they are at the beginning
@@ -62,12 +64,12 @@ namespace NetTok.Tokenizer
         /// <exception cref="IOException">If there is an error when reading the configuration.</exception>
         public AbbreviationDescription(string language, IDictionary<string, string> macrosMap)
         {
-            DefinitionsMap = new Dictionary<string, IRegExp>();
-            RulesMap = new Dictionary<string, IRegExp>();
-            RegExpMap = new Dictionary<IRegExp, string>();
+            DefinitionsMap = new Dictionary<string, Regex>();
+            RulesMap = new Dictionary<string, Regex>();
+            RegExpMap = new Dictionary<Regex, string>();
             base.ClassMembersMap = new Dictionary<string, HashSet<string>>();
 
-            using (var reader = new StreamReader(ResourceMethods.ReadResource(language, AbbrevDescription)))
+            using (var reader = new StreamReader(ResourceMethods.ReadResource(language, AbbreviationDescriptionSuffix)))
             {
                 // read config file to lists start
                 ReadToLists(reader);
@@ -76,7 +78,7 @@ namespace NetTok.Tokenizer
                 // read definitions
                 IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
                 base.LoadDefinitions(reader, macrosMap, definitionsMap);
-                RulesMap[AllRule] = createAllRule(definitionsMap);
+                RulesMap[AllRule] = CreateAllRule(definitionsMap);
             }
 
             // load list of terms that only start with a capital letter when they are
@@ -92,7 +94,7 @@ namespace NetTok.Tokenizer
         ///     the beginning of a sentence.
         /// </summary>
         /// <returns> a set with the terms </returns>
-        protected virtual ISet<string> NonCapTerms { get; private set; }
+        public virtual HashSet<string> NonCapTerms { get; private set; }
 
         /// <summary>
         ///     Reads the list of terms that only start with a capital letter when they are at the beginning of

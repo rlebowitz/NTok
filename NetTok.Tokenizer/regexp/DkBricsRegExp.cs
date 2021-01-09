@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NetTok.Tokenizer.Exceptions;
 
 /*
@@ -25,14 +26,8 @@ using NetTok.Tokenizer.Exceptions;
 
 namespace NetTok.Tokenizer.RegExp
 {
-
-    using InitializationException = InitializationException;
-    using AutomatonMatcher = dk.brics.automaton.AutomatonMatcher;
-    using RunAutomaton = dk.brics.automaton.RunAutomaton;
-
     /// <summary>
-    /// Implements the <seealso cref="IRegExp"/> interface for regular expressions of the dk.brics.automaton
-    /// package.
+    /// Implements the <seealso cref="IRegExp"/> interface for regular expressions of the dk.brics.automaton package.
     /// 
     /// @author Joerg Steffen, DFKI
     /// </summary>

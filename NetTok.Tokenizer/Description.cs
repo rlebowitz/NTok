@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NetTok.Tokenizer.Exceptions;
-using NetTok.Tokenizer.RegExp;
 
 /*
  NTok
@@ -89,52 +89,20 @@ namespace NetTok.Tokenizer
         /// </summary>
         public const string RulesMarker = "RULES:";
 
-        /// <summary>
-        ///     factory for creating regular expressions
-        /// </summary>
-        public static readonly RegExpFactory Factory = new DkBricsRegExpFactory();
-
-
         // regular expression for matching references used in regular expressions of config files
-        private static readonly IRegExp ReferencesMatcher = Factory.createRegExp("\\<[A-Za-z0-9_]+\\>");
+        private static readonly Regex ReferencesMatcher = new Regex("\\<[A-Za-z0-9_]+\\>");
 
         /// <returns> the definitions map </returns>
-        public Dictionary<string, IRegExp> DefinitionsMap { get; set; }
+        public Dictionary<string, Regex> DefinitionsMap { get; set; }
 
         /// <returns> the rules map </returns>
-        public Dictionary<string, IRegExp> RulesMap { get; set; }
+        public Dictionary<string, Regex> RulesMap { get; set; }
 
         /// <returns> the regular expressions map </returns>
-        public Dictionary<IRegExp, string> RegExpMap { get; set; }
+        public Dictionary<Regex, string> RegExpMap { get; set; }
 
         /// <returns> the class members map </returns>
         public virtual Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
-        ///// <summary>
-        /////     Returns the first child element of the given element with the given name. If no such child
-        /////     exists, returns {@code null}.
-        ///// </summary>
-        ///// <param name="ele">
-        /////     the parent element
-        ///// </param>
-        ///// <param name="childName">
-        /////     the child name
-        ///// </param>
-        ///// <returns> the first child element with the specified name or {@code null} if no such child exists </returns>
-        //public Element getChild(XElement ele, string childName)
-        //{
-        //    NodeList children = ele.ChildNodes;
-        //    for (int i = 0, iMax = children.Length; i < iMax; i++)
-        //    {
-        //        Node oneChild = children.item(i);
-        //        if (oneChild is Element && ((Element) oneChild).TagName.Equals(childName))
-        //        {
-        //            return (Element) oneChild;
-        //        }
-        //    }
-
-        //    return null;
-        //}
-
 
         /// <summary>
         ///     Reads the macro configuration from the given path and adds it to the given map.
@@ -329,7 +297,7 @@ namespace NetTok.Tokenizer
             {
                 try
                 {
-                    DefinitionsMap[oneEntry.Key] = Factory.createRegExp(oneEntry.Value.ToString());
+                    DefinitionsMap[oneEntry.Key] = new Regex(oneEntry.Value.ToString());
                 }
                 catch (Exception e)
                 {
@@ -394,7 +362,7 @@ namespace NetTok.Tokenizer
                     regExpString = ReplaceReferences(regExpString, macrosMap);
 
                     // add rule to map
-                    var regExp = Factory.createRegExp(regExpString);
+                    var regExp = new Regex(regExpString, RegexOptions.Compiled);
                     RulesMap[ruleName] = regExp;
                     // if rule has a class, add regular expression to regular expression map
                     if (className.Length > 0)
@@ -415,7 +383,7 @@ namespace NetTok.Tokenizer
         /// <param name="reader">
         ///     the reader
         /// </param>
-         /// <exception cref="IOException">
+        /// <exception cref="IOException">
         ///     if there is an error during reading
         /// </exception>
         /// <exception cref="InitializationException">
@@ -512,31 +480,30 @@ namespace NetTok.Tokenizer
         /// <param name="regExpString">
         ///     the regular expression string with possible references
         /// </param>
-        /// <param name="refMap">
-        ///     a map of reference name to regular expression strings
-        /// </param>
-        /// <returns> the modified regular expression string </returns>
+        /// <param name="refMap">A map of reference name to regular expression strings</param>
+        /// <returns>The modified regular expression string.</returns>
         private static string ReplaceReferences(string regExpString, IDictionary<string, string> refMap)
         {
             var result = regExpString;
 
-            var references = ReferencesMatcher.GetAllMatches(regExpString);
+            //   var references = _referencesMatcher.GetAllMatches(regExpString);
+            var matches = ReferencesMatcher.Matches(regExpString);
+            var references = matches.Select(match => match).ToList();
 
             foreach (var reference in references)
             {
                 // get reference name by removing opening and closing angle brackets
-                var refName = reference.Image[1..^1];
+                var refName = reference.Value[1..^1];
                 var refRegExpr = refMap[refName];
                 if (null == refRegExpr)
                 {
                     throw new ProcessingException($"unknown reference {refName} in regular expression {regExpString}");
                 }
 
-
                 //result = result.replaceFirst(reference.Image,
                 //    string.Format("({0})", Matcher.quoteReplacement(refRegExpr)));
                 // ToDo - not sure exactly what the above lines do, this is my best guess:
-                var regex = new Regex(reference.Image);
+                var regex = new Regex(reference.Value);
                 result = regex.Replace(result, $"({refRegExpr})", 1);
             }
 
@@ -547,28 +514,26 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     Creates a rule that matches ALL definitions.
         /// </summary>
-        /// <param name="defsMap">
-        ///     the definitions map
-        /// </param>
+        /// <param name="definitionsMap">The definitions map.</param>
         /// <returns> a regular expression matching all definitions </returns>
-        public static IRegExp createAllRule(IDictionary<string, string> defsMap)
+        public Regex CreateAllRule(IDictionary<string, string> definitionsMap)
         {
             var ruleRegExpr = new StringBuilder();
 
             // iterate over definitions
-            IList<string> defsList = new List<string>(defsMap.Values);
-            for (int i = 0, iMax = defsList.Count; i < iMax; i++)
+            IList<string> definitionsList = new List<string>(definitionsMap.Values);
+            for (int i = 0, iMax = definitionsList.Count; i < iMax; i++)
             {
-                var regExpr = defsList[i];
+                var regularExpression = definitionsList[i];
                 // extend regular expression with another disjunct
-                ruleRegExpr.Append(string.Format("({0})", regExpr));
+                ruleRegExpr.Append($"({regularExpression})");
                 if (i < iMax - 1)
                 {
                     ruleRegExpr.Append("|");
                 }
             }
 
-            return Factory.createRegExp(ruleRegExpr.ToString());
+            return new Regex(ruleRegExpr.ToString());
         }
     }
 }
