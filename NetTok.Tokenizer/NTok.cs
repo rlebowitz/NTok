@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using NetTok.Tokenizer.Annotate;
 using NetTok.Tokenizer.Exceptions;
-using NetTok.Tokenizer.output;
+using NetTok.Tokenizer.Output;
 
 /*
  * NTok

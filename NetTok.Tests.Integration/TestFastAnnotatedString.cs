@@ -1,12 +1,18 @@
 ﻿using System.IO;
-using System.Text;
+using NetTok.Tokenizer;
+using NetTok.Tokenizer.Annotate;
+using Xunit;
+using Xunit.Abstractions;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+ * NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -23,84 +29,75 @@ using System.Text;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace de.dfki.lt.tools.tokenizer.annotate
+namespace NetTok.Tests.Integration
 {
-//JAVA TO C# CONVERTER TODO TASK: This Java 'import static' statement cannot be converted to C#:
-//	import static org.hamcrest.CoreMatchers.@is;
-//JAVA TO C# CONVERTER TODO TASK: This Java 'import static' statement cannot be converted to C#:
-//	import static org.hamcrest.CoreMatchers.not;
-//JAVA TO C# CONVERTER TODO TASK: This Java 'import static' statement cannot be converted to C#:
-//	import static org.hamcrest.CoreMatchers.nullValue;
-//JAVA TO C# CONVERTER TODO TASK: This Java 'import static' statement cannot be converted to C#:
-//	import static org.hamcrest.MatcherAssert.assertThat;
+    /// <summary>
+    ///     Test class for <seealso cref="FastAnnotatedString" />.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class TestFastAnnotatedString
+    {
+
+        private ITestOutputHelper Output { get; }
+        public TestFastAnnotatedString(ITestOutputHelper output)
+        {
+            Output = output;
+        }
+        /// <summary>
+        ///     Tests annotated Strings.
+        /// </summary>
+        [Fact]
+        public void FastAnnotatedStringTest()
+        {
+            var input1 = new FastAnnotatedString("This is a test.");
+            // 0123456789012345
+            input1.Annotate("type", "tok", 0, 4);
+            input1.Annotate("type", "tok", 5, 7);
+            input1.Annotate("type", "tok", 8, 9);
+            input1.Annotate("type", "tok", 10, 14);
+            input1.Annotate("type", "punct", 14, 15);
+            CompareResults(input1, "expected-results/annotated-string-expected-1.txt");
+
+            var input2 = new FastAnnotatedString("sdfslkdflsdfsldfksdf");
+            input2.Annotate("type", "tok", 5, 15);
+            Assert.Equal("kdflsdfsld\t5-15\ttok", input2.ToString("type").Trim());
+
+            input2.Annotate("type", "mid", 9, 12);
+            CompareResults(input2, "expected-results/annotated-string-expected-2.txt");
+        }
 
 
-	using Test = org.junit.Test;
-
-	/// <summary>
-	/// Test class for <seealso cref="FastAnnotatedString"/>.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class TestFastAnnotatedString
-	{
-
-	  /// <summary>
-	  /// Tests annotated Strings.
-	  /// </summary>
-	  /// <exception cref="IOException">
-	  ///           if there is an error when reading the result file </exception>
-//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-//ORIGINAL LINE: @Test public void testFastAnnotatedString() throws java.io.IOException
-//JAVA TO C# CONVERTER WARNING: Method 'throws' clauses are not available in C#:
-	  public virtual void testFastAnnotatedString()
-	  {
-
-		AnnotatedString input1 = new FastAnnotatedString("This is a test.");
-		// 0123456789012345
-		input1.annotate("type", "tok", 0, 4);
-		input1.annotate("type", "tok", 5, 7);
-		input1.annotate("type", "tok", 8, 9);
-		input1.annotate("type", "tok", 10, 14);
-		input1.annotate("type", "punct", 14, 15);
-		compareResults(input1, "expected-results/annotated-string-expected-1.txt");
-
-		AnnotatedString input2 = new FastAnnotatedString("sdfslkdflsdfsldfksdf");
-		input2.annotate("type", "tok", 5, 15);
-		assertThat(input2.toString("type").Trim(), @is("kdflsdfsld\t5-15\ttok"));
-
-		input2.annotate("type", "mid", 9, 12);
-		compareResults(input2, "expected-results/annotated-string-expected-2.txt");
-	  }
-
-
-	  /// <summary>
-	  /// Compares the string representation of the given annotation and the expected result as read from
-	  /// the given file name.
-	  /// </summary>
-	  /// <param name="input">
-	  ///          the annotated string </param>
-	  /// <param name="resFileName">
-	  ///          the result file name </param>
-	  /// <exception cref="IOException">
-	  ///           if there is an error when reading the result file </exception>
-//JAVA TO C# CONVERTER WARNING: Method 'throws' clauses are not available in C#:
-//ORIGINAL LINE: private void compareResults(AnnotatedString input, String resFileName) throws java.io.IOException
-	  private void compareResults(AnnotatedString input, string resFileName)
-	  {
-
-		StreamReader resReader = new StreamReader(this.GetType().ClassLoader.getResourceAsStream(resFileName), Encoding.UTF8);
-		StreamReader inputReader = new StreamReader(new StringReader(input.toString("type")));
-		// compare line by line with expected result
-		int lineCount = 1;
-		string resLine;
-		while (!string.ReferenceEquals((resLine = resReader.ReadLine()), null))
-		{
-		  string inputLine = inputReader.ReadLine();
-		  assertThat(inputLine, @is(not(nullValue())));
-		  assertThat(resFileName + ": line " + lineCount, resLine, @is(inputLine));
-		  lineCount++;
-		}
-	  }
-	}
+        /// <summary>
+        ///     Compares the string representation of the given annotation and the expected result as read from
+        ///     the given file name.
+        /// </summary>
+        /// <param name="input">
+        ///     the annotated string
+        /// </param>
+        /// <param name="fileName">
+        ///     the result file name
+        /// </param>
+        /// <exception cref="IOException">
+        ///     if there is an error when reading the result file
+        /// </exception>
+        private void CompareResults(IAnnotatedString input, string fileName)
+        {
+            using var resReader = new StreamReader(ResourceMethods.ReadResource(fileName));
+            using var inputReader = new StringReader(input.ToString("type"));
+            // compare line by line with expected result
+            var lineCount = 1;
+            string resLine;
+            while ((resLine = resReader.ReadLine()) != null)
+            {
+                var inputLine = inputReader.ReadLine();
+                Assert.NotNull(inputLine);
+                if (!inputLine.Equals(resLine))
+                {
+                    Output.WriteLine($"File: {fileName}\t Line: {lineCount}\t Input: {inputLine}\t Resource: {resLine}");
+                }
+                Assert.Equal(resLine, inputLine); 
+                lineCount++;
+            }
+        }
+    }
 }

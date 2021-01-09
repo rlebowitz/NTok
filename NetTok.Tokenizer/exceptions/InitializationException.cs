@@ -1,11 +1,14 @@
 ﻿using System;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+ * NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -24,65 +27,44 @@
 
 namespace NetTok.Tokenizer.Exceptions
 {
-	/// <summary>
-	/// <seealso cref="InitializationException"/> is thrown when the tokenizer can't be initialized.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class InitializationException : Exception
-	{
-
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="InitializationException"/> with null as its detail message. The
-	  /// cause is not initialized.
-	  /// </summary>
-	  public InitializationException() : base()
-	  {
-
-	  }
+    /// <summary>
+    ///     <seealso cref="InitializationException" /> is thrown when the tokenizer can't be initialized.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class InitializationException : Exception
+    {
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="InitializationException" /> with null as its detail message. The
+        ///     cause is not initialized.
+        /// </summary>
+        public InitializationException() { }
 
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="InitializationException"/> with the given detail message. The
-	  /// cause is not initialized.
-	  /// </summary>
-	  /// <param name="message">
-	  ///          the detail message </param>
-	  public InitializationException(string message) : base(message)
-	  {
-
-	  }
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="InitializationException" /> with the given detail message. The
+        ///     cause is not initialized.
+        /// </summary>
+        /// <param name="message">
+        ///     the detail message
+        /// </param>
+        public InitializationException(string message) : base(message) { }
 
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="InitializationException"/> with the specified cause and a detail
-	  /// message of (cause==null ? null : cause.toString()) (which typically contains the class and
-	  /// detail message of cause).
-	  /// </summary>
-	  /// <param name="cause">
-	  ///          a throwable with the cause of the exception (which is saved for later retrieval by the
-	  ///          <seealso cref="getCause()"/> method). (A {@code null} value is permitted, and indicates that
-	  ///          the cause is nonexistent or unknown.) </param>
-	  public InitializationException(Exception cause) : base(cause)
-	  {
-
-	  }
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="InitializationException" /> with the specified cause and a detail
+        ///     message of (cause==null ? null : cause.toString()) (which typically contains the class and
+        ///     detail message of cause).
+        /// </summary>
+        /// <param name="cause">A throwable with the cause of the exception.</param>
+        public InitializationException(Exception cause) : base(cause.Message, cause) { }
 
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="InitializationException"/> with the given detail message and the
-	  /// given cause.
-	  /// </summary>
-	  /// <param name="message">
-	  ///          the detail message </param>
-	  /// <param name="cause">
-	  ///          a throwable with the cause of the exception (which is saved for later retrieval by the
-	  ///          <seealso cref="getCause()"/> method). (A {@code null} value is permitted, and indicates that
-	  ///          the cause is nonexistent or unknown.) </param>
-	  public InitializationException(string message, Exception cause) : base(message, cause)
-	  {
-
-	  }
-	}
-
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="InitializationException" /> with the given detail message and the
+        ///     given cause.
+        /// </summary>
+        /// <param name="message">The detail message.</param>
+        /// <param name="cause">A throwable with the cause of the exception.</param>
+        public InitializationException(string message, Exception cause) : base(message, cause) { }
+    }
 }

@@ -20,7 +20,7 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.RegExp
+namespace NetTok.Tokenizer
 {
 	/// <summary>
 	/// Holds the result of matching an input string with a regular expression.

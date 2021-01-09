@@ -127,7 +127,7 @@ namespace NetTok.Tokenizer
                             }
 
                             // check with matchers
-                            if (abbrevMatcher.Matches(oneTok))
+                            if (abbrevMatcher.Matches(oneTok).Any())
                             {
                                 continue;
                             }
@@ -145,7 +145,7 @@ namespace NetTok.Tokenizer
                             // the terms in the list and remove the punctuation
                             var firstChar = oneTok[0];
                             firstChar = char.ToUpper(firstChar);
-                            var tempTok = firstChar + oneTok.Substring(1, oneTok.Length - 1 - 1);
+                            var tempTok = firstChar + oneTok[1..^1];
                             if (nonCapTerms.Contains(tempTok))
                             {
                                 continue;

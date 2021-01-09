@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Compile Remove="FileTools.cs" />
+    <Compile Remove="Match.cs" />
     <Compile Remove="RegExp\DkBricsRegExp.cs" />
     <Compile Remove="RegExp\DkBricsRegExpFactory.cs" />
     <Compile Remove="RegExp\Match.cs" />

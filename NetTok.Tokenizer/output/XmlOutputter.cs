@@ -1,16 +1,20 @@
 ﻿using System;
 using System.IO;
 using System.Reflection.Metadata;
+using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using NetTok.Tokenizer.Annotate;
 using NetTok.Tokenizer.Exceptions;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+ * NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -27,112 +31,83 @@ using NetTok.Tokenizer.Exceptions;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer.output
+namespace NetTok.Tokenizer.Output
 {
 
 	/// <summary>
 	/// <seealso cref="XmlOutputter"/> provides static methods that return an XML presentation of an
 	/// <seealso cref="IAnnotatedString"/>.
-	/// 
-	/// @author Joerg Steffen, DFKI
+	/// @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
 	/// </summary>
-	public sealed class XmlOutputter
+	public static class XmlOutputter
 	{
 
 	  /// <summary>
 	  /// name of XML elements in the result that describe a document </summary>
-	  public const string XML_DOCUMENT = "Document";
+	  public const string XMLDocument = "Document";
 
 	  /// <summary>
 	  /// name of XML elements in the result that describe a paragraph </summary>
-	  public const string XML_PARAGRAPH = "p";
+	  public const string XMLParagraph = "p";
 
 	  /// <summary>
 	  /// name of XML elements in the result that describe a text unit; text units are contained in
 	  /// paragraphs
 	  /// </summary>
-	  public const string XML_TEXT_UNIT = "tu";
+	  public const string XMLTextUnit = "tu";
 
 	  /// <summary>
 	  /// name of the XML attribute in {@code XML_TEXT_UNIT} that contains the text unit id </summary>
-	  public const string ID_ATT = "id";
+	  public const string IdAttribute = "id";
 
 	  /// <summary>
 	  /// name of XML elements in the result that describe a token; tokens are contained in text units
 	  /// </summary>
-	  public const string XML_TOKEN = "Token";
+	  public const string XMLToken = "Token";
 
 	  /// <summary>
 	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token image </summary>
-	  public const string IMAGE_ATT = "string";
+	  public const string ImageAttribute = "string";
 
 	  /// <summary>
 	  /// name of the XML attribute in {@code XML_TOKEN} that contains the Penn Treebank token image if
 	  /// it is any different than the regular surface string
 	  /// </summary>
-	  public const string PTB_ATT = "ptb";
+	  public const string PennTreeBankAttribute = "ptb";
 
 	  /// <summary>
 	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token type </summary>
-	  public const string TOK_TYPE_ATT = "type";
+	  public const string TokenTypeAttribute = "type";
 
 	  /// <summary>
 	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token offset </summary>
-	  public const string OFFSET_ATT = "offset";
+	  public const string OffsetAttribute = "offset";
 
 	  /// <summary>
 	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token length </summary>
-	  public const string LENGTH_ATT = "length";
+	  public const string LengthAttribute = "length";
 
+	  private static readonly ILoggerFactory LoggerFactory = new LoggerFactory();
 	  /// <summary>
 	  /// the logger </summary>
-	  private static readonly ILogger logger = LoggerFactory.getLogger(typeof(XmlOutputter));
-
-
-	  // would create a new instance of {@link XmlOutputter}; not to be used
-	  private XmlOutputter()
-	  {
-
-		// private constructor to enforce noninstantiability
-	  }
-
+	  private static readonly ILogger Logger = new Logger<NTok>(LoggerFactory);
 
 	  /// <summary>
 	  /// Creates an XML document from the given annotated string.
 	  /// </summary>
-	  /// <param name="input">
-	  ///          the annotated string </param>
-	  /// <returns> the XML document </returns>
-	  /// <exception cref="ProcessingException">
-	  ///              if an error occurs </exception>
-	  public static Document createXmlDocument(IAnnotatedString input)
+	  /// <param name="input">The annotated string.</param>
+	  /// <returns>The XDocument.</returns>
+	  /// <exception cref="ProcessingException">if an error occurs </exception>
+	  public static XDocument CreateXmlDocument(IAnnotatedString input)
 	  {
-
 		// create result document
-		Document doc = null;
-		try
-		{
-		  DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		  DocumentBuilder builder = factory.newDocumentBuilder();
-		  doc = builder.newDocument();
-		}
-		catch (ParserConfigurationException pce)
-		{
-		  throw new ProcessingException(pce.LocalizedMessage, pce);
-		}
-
-		// create root element
-		Element root = doc.createElement(XML_DOCUMENT);
-		doc.appendChild(root);
-
+        var doc = new XDocument(new XElement(XMLDocument));
 		// init text unit counter
 		int tuId = 0;
-
 		// create paragraph element
-		Element p = doc.createElement(XML_PARAGRAPH);
+		XElement p = new XElement(XMLParagraph);
 		// create text unit element
-		Element tu = doc.createElement(XML_TEXT_UNIT);
-		tu.setAttribute(ID_ATT, tuId + "");
+        XElement tu = new XElement(XMLTextUnit, new XAttribute(IdAttribute,Convert.ToString(tuId) );
 
 		// iterate over tokens and create XML elements
 		char c = input.setIndex(0);
@@ -151,18 +126,18 @@ namespace NetTok.Tokenizer.output
 			  throw new ProcessingException(string.Format("undefined class {0}", input.GetAnnotation(NTok.ClassAnnotation)));
 			}
 			// create new element
-			Element xmlToken = doc.createElement(XML_TOKEN);
+			Element xmlToken = doc.createElement(XMLToken);
 			// set attributes
 			string image = input.Substring(tokenStart, tokenEnd - tokenStart);
-			xmlToken.setAttribute(IMAGE_ATT, image);
+			xmlToken.setAttribute(ImageAttribute, image);
 			string ptbImage = Token.applyPtbFormat(image, type);
 			if (null != ptbImage)
 			{
-			  xmlToken.setAttribute(PTB_ATT, ptbImage);
+			  xmlToken.setAttribute(PennTreeBankAttribute, ptbImage);
 			}
-			xmlToken.setAttribute(TOK_TYPE_ATT, type);
-			xmlToken.setAttribute(OFFSET_ATT, tokenStart + "");
-			xmlToken.setAttribute(LENGTH_ATT, image.Length + "");
+			xmlToken.setAttribute(TokenTypeAttribute, type);
+			xmlToken.setAttribute(OffsetAttribute, tokenStart + "");
+			xmlToken.setAttribute(LengthAttribute, image.Length + "");
 
 			// check if token is first token of a paragraph or text unit
 			if (null != input.GetAnnotation(NTok.BorderAnnotation))
@@ -171,9 +146,9 @@ namespace NetTok.Tokenizer.output
 			  if (tu.hasChildNodes())
 			  {
 				p.appendChild(tu);
-				tu = doc.createElement(XML_TEXT_UNIT);
+				tu = doc.createElement(XMLTextUnit);
 				tuId++;
-				tu.setAttribute(ID_ATT, tuId + "");
+				tu.setAttribute(IdAttribute, tuId + "");
 			  }
 			}
 
@@ -184,7 +159,7 @@ namespace NetTok.Tokenizer.output
 			  if (p.hasChildNodes())
 			  {
 				root.appendChild(p);
-				p = doc.createElement(XML_PARAGRAPH);
+				p = doc.createElement(XMLParagraph);
 			  }
 			}
 
@@ -225,7 +200,7 @@ namespace NetTok.Tokenizer.output
 	  {
 
 		// tokenize text
-		Document doc = createXmlDocument(input);
+		Document doc = CreateXmlDocument(input);
 
 		try
 		{
@@ -263,7 +238,7 @@ namespace NetTok.Tokenizer.output
 	  {
 
 		// tokenize text
-		Document doc = createXmlDocument(input);
+		Document doc = CreateXmlDocument(input);
 
 		// init output writer for result
 		StringWriter @out = new StringWriter();
@@ -341,7 +316,7 @@ namespace NetTok.Tokenizer.output
 		}
 		catch (IOException e)
 		{
-		  logger.error(e.LocalizedMessage, e);
+		  Logger.error(e.LocalizedMessage, e);
 		}
 	  }
 	}
