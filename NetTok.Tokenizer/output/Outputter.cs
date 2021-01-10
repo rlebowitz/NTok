@@ -64,7 +64,7 @@ namespace NetTok.Tokenizer.Output
                 if (null != type)
                 {
                     // create new token instance
-                    var tok = new Token(tokenStart, tokenEnd, type, input.SubString(tokenStart, tokenEnd - tokenStart));
+                    var tok = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd - tokenStart));
 
                     // check if token is first token of a paragraph or text unit
                     if (null != input.GetAnnotation(NTok.BorderAnnotation))
@@ -125,7 +125,7 @@ namespace NetTok.Tokenizer.Output
                 if (null != type)
                 {
                     // create new token instance
-                    var tok = new Token(tokenStart, tokenEnd, type, input.SubString(tokenStart, tokenEnd - tokenStart));
+                    var tok = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd - tokenStart));
 
                     // add token to token list
                     tokenList.Add(tok);

@@ -46,7 +46,7 @@ namespace NetTok.Tokenizer
         protected internal const string EncliticRule = "ENCLITIC_RULE";
 
         // name suffix of the resource file with the clitic description
-        private const string CliticDescriptionSuffix = "_clitics.cfg";
+        private const string CliticDescriptionSuffix = "clitics.cfg";
 
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace NetTok.Tokenizer
             RulesMap = new Dictionary<string, Regex>();
             RegExpMap = new Dictionary<Regex, string>();
 
-            using var stream = ResourceMethods.ReadResource(language, CliticDescriptionSuffix);
+            using var stream = ResourceManager.Read(language, CliticDescriptionSuffix);
             using var reader = new StreamReader(stream);
 
             // read config file to definitions start

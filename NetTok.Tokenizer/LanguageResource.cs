@@ -68,7 +68,7 @@ namespace NetTok.Tokenizer
             try
             {
                 // load classes hierarchy
-                using var stream = ResourceMethods.ReadResource(language, ClassesHierarchy);
+                using var stream = ResourceManager.Read(language, ClassesHierarchy);
                 var document = XDocument.Parse(new StreamReader(stream).ReadToEnd());
                 // set hierarchy root
                 ClassesRoot = document.Root;
@@ -152,7 +152,7 @@ namespace NetTok.Tokenizer
         /// <param name="elementList">
         ///     node list of class elements
         /// </param>
-        private void MapClasses(List<XElement> elementList)
+        private void MapClasses(IEnumerable<XElement> elementList)
         {
             // iterate over elements
             foreach (var element in elementList)

@@ -49,7 +49,7 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     name suffix of the resource file with the abbreviations description
         /// </summary>
-        private const string AbbreviationDescriptionSuffix = "_abbrev.cfg";
+        private const string AbbreviationDescriptionSuffix = "abbrev.cfg";
 
 
         // the most common terms that only start with a capital letter when they are at the beginning
@@ -69,7 +69,7 @@ namespace NetTok.Tokenizer
             RegExpMap = new Dictionary<Regex, string>();
             base.ClassMembersMap = new Dictionary<string, HashSet<string>>();
 
-            using (var reader = new StreamReader(ResourceMethods.ReadResource(language, AbbreviationDescriptionSuffix)))
+            using (var reader = new StreamReader(ResourceManager.Read(language, AbbreviationDescriptionSuffix)))
             {
                 // read config file to lists start
                 ReadToLists(reader);
@@ -83,7 +83,7 @@ namespace NetTok.Tokenizer
 
             // load list of terms that only start with a capital letter when they are
             // at the beginning of a sentence
-            using (var reader = new StreamReader(ResourceMethods.ReadResource($"{language}_nonCapTerms.txt")))
+            using (var reader = new StreamReader(ResourceManager.Read($"{language}_nonCapTerms.txt")))
             {
                 ReadNonCapTerms(reader);
             }

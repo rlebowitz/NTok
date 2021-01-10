@@ -1,11 +1,14 @@
 ﻿using System.Text;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+  * NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -25,240 +28,125 @@
 namespace NetTok.Tokenizer.Output
 {
     /// <summary>
-	/// Represents a token with its type and surface image.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class Token
-	{
+    ///     Represents a token with its type and surface image.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class Token
+    {
+        // the Penn Treebank replacements for brackets:
+        private const string LRB = "-LRB-";
+        private const string RRB = "-RRB-";
+        private const string LSB = "-LSB-";
+        private const string RSB = "-RSB-";
+        private const string LCB = "-LCB-";
+        private const string RCB = "-RCB-";
 
-	  // the Penn Treebank replacements for brackets:
-	  private const string LRB = "-LRB-";
-	  private const string RRB = "-RRB-";
-	  private const string LSB = "-LSB-";
-	  private const string RSB = "-RSB-";
-	  private const string LCB = "-LCB-";
-	  private const string RCB = "-RCB-";
+        public Token() { }
 
-	  // start index of the token
-	  private int startIndex;
+        /// <summary>
+        ///     Creates a new instance of Token for the given start index, end index, type and surface image.
+        /// </summary>
+        /// <param name="startIndex">The specified start index.</param>
+        /// <param name="endIndex">The specified end index.</param>
+        /// <param name="type">The specified type.</param>
+        /// <param name="image">The surface image.</param>
+        public Token(int startIndex, int endIndex, string type, string image)
+        {
+            StartIndex = startIndex;
+            EndIndex = endIndex;
+            Type = type;
+            Image = image;
+        }
 
-	  // end index of the token
-	  private int endIndex;
+        /// <summary>The start index.</summary>
+        public int StartIndex { get; }
 
-	  // type of the token
-	  private string type;
+        /// <summary>The end index.</summary>
+        public int EndIndex { get; }
 
-	  // surface image of the token
-	  private string image;
+        /// <summary>The token type.</summary>
+        public string Type { get; } = string.Empty;
 
+        /// <summary>The surface image.</summary>
+        public string Image { get; } = string.Empty;
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="Token"/>.
-	  /// </summary>
-	  public Token()
-	  {
-
-		this.StartIndex = 0;
-		this.EndIndex = 0;
-		this.Type = "";
-		this.Image = "";
-	  }
-
-
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="Token"/> for the given start index, end index, type and surface
-	  /// image.
-	  /// </summary>
-	  /// <param name="startIndex">
-	  ///          the start index </param>
-	  /// <param name="endIndex">
-	  ///          the end index </param>
-	  /// <param name="type">
-	  ///          the type </param>
-	  /// <param name="image">
-	  ///          the surface image </param>
-	  public Token(int startIndex, int endIndex, string type, string image)
-	  {
-
-		this.StartIndex = startIndex;
-		this.EndIndex = endIndex;
-		this.Type = type;
-		this.Image = image;
-	  }
+        /// <summary>
+        ///     Returns the Penn Treebank surface image of the token if a Penn Treebank replacement took place,
+        ///     otherwise returns null.
+        /// </summary>
+        /// <returns>The surface image as the result of the Penn Treebank token replacement or null.</returns>
+        public string PennTreeBankImage => ApplyPennTreeBankFormat(Image, Type);
 
 
-	  /// <returns> the start index </returns>
-	  public virtual int StartIndex
-	  {
-		  get
-		  {
-    
-			return this.startIndex;
-		  }
-		  set
-		  {
-    
-			this.startIndex = value;
-		  }
-	  }
+        public override string ToString()
+        {
+            var result = new StringBuilder(
+                $"    Token: {$"\"{Image}\"",-15}\tType: {Type}\tStart: {StartIndex}\tEnd: {EndIndex}");
+
+            var ptbImage = ApplyPennTreeBankFormat(Image, Type);
+            if (null != ptbImage)
+            {
+                result.Append($"\tPTB: \"{ptbImage}\"");
+            }
+
+            result.Append("%n");
+
+            return result.ToString();
+        }
 
 
+        /// <summary>
+        ///     This applies some replacements used in the Penn Treebank format to the given token image of the given type.
+        /// </summary>
+        /// <param name="image">The token image.</param>
+        /// <param name="type">The token type.</param>
+        /// <returns>A modified string or {@code null} if no replacement took place.</returns>
+        public static string ApplyPennTreeBankFormat(string image, string type)
+        {
+            string result = null;
 
+            switch (type)
+            {
+                case PunctuationDescription.OpenBracket:
+                    result = image switch
+                    {
+                        "(" => LRB,
+                        "[" => LSB,
+                        "{" => LCB,
+                        _ => null
+                    };
+                    break;
+                case PunctuationDescription.CloseBracket:
+                    result = image switch
+                    {
+                        ")" => RRB,
+                        "]" => RSB,
+                        "}" => RCB,
+                        _ => null
+                    };
+                    break;
+                case PunctuationDescription.OpenPunct:
+                    result = "``";
+                    break;
+                case PunctuationDescription.ClosePunct:
+                    result = "''";
+                    break;
+                default:
+                {
+                    if (image.Contains("/"))
+                    {
+                        result = image.Replace("/", "\\/");
+                    }
+                    else if (image.Contains("*"))
+                    {
+                        result = image.Replace("*", "\\*");
+                    }
 
-	  /// <returns> the end index </returns>
-	  public virtual int EndIndex
-	  {
-		  get
-		  {
-    
-			return this.endIndex;
-		  }
-		  set
-		  {
-    
-			this.endIndex = value;
-		  }
-	  }
+                    break;
+                }
+            }
 
-
-
-
-	  /// <returns> the token type </returns>
-	  public virtual string Type
-	  {
-		  get
-		  {
-    
-			return this.type;
-		  }
-		  set
-		  {
-    
-			this.type = value;
-		  }
-	  }
-
-
-
-
-	  /// <returns> the surface image </returns>
-	  public virtual string Image
-	  {
-		  get
-		  {
-    
-			return this.image;
-		  }
-		  set
-		  {
-    
-			this.image = value;
-		  }
-	  }
-
-
-
-
-	  /// <summary>
-	  /// Returns the Penn Treebank surface image of the token if a Penn Treebank replacement took place,
-	  /// {@code null} otherwise.
-	  /// </summary>
-	  /// <returns> the surface image as the result of the Penn Treebank token replacement or {@code null} </returns>
-	  public virtual string PtbImage
-	  {
-		  get
-		  {
-    
-			return applyPtbFormat(this.image, this.type);
-		  }
-	  }
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override string ToString()
-	  {
-
-		StringBuilder result = new StringBuilder(string.Format("    Token: {0,-15}\tType: {1}\tStart: {2}\tEnd: {3}", string.Format("\"{0}\"", this.Image), this.Type, this.StartIndex, this.EndIndex));
-
-		string ptbImage = applyPtbFormat(this.image, this.type);
-		if (null != ptbImage)
-		{
-		  result.Append(string.Format("\tPTB: \"{0}\"", ptbImage));
-		}
-		result.Append(string.Format("%n"));
-
-		return result.ToString();
-	  }
-
-
-	  /// <summary>
-	  /// This applies some replacements used in the Penn Treebank format to the given token image of the
-	  /// given type.
-	  /// </summary>
-	  /// <param name="image">
-	  ///          the token image </param>
-	  /// <param name="type">
-	  ///          the type </param>
-	  /// <returns> a modified string or {@code null} if no replacement took place </returns>
-	  public static string applyPtbFormat(string image, string type)
-	  {
-
-		string result = null;
-
-		if (type.Equals(PunctuationDescription.OpenBracket))
-		{
-
-		  if (image.Equals("("))
-		  {
-			result = LRB;
-		  }
-		  else if (image.Equals("["))
-		  {
-			result = LSB;
-		  }
-		  else if (image.Equals("{"))
-		  {
-			result = LCB;
-		  }
-		}
-		else if (type.Equals(PunctuationDescription.CloseBracket))
-		{
-
-		  if (image.Equals(")"))
-		  {
-			result = RRB;
-		  }
-		  else if (image.Equals("]"))
-		  {
-			result = RSB;
-		  }
-		  else if (image.Equals("}"))
-		  {
-			result = RCB;
-		  }
-		}
-		else if (type.Equals(PunctuationDescription.OpenPunct))
-		{
-		  result = "``";
-		}
-		else if (type.Equals(PunctuationDescription.ClosePunct))
-		{
-		  result = "''";
-		}
-		else if (image.Contains("/"))
-		{
-		  result = image.Replace("/", "\\/");
-		}
-		else if (image.Contains("*"))
-		{
-		  result = image.Replace("*", "\\*");
-		}
-
-		return result;
-	  }
-	}
-
+            return result;
+        }
+    }
 }

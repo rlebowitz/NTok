@@ -45,7 +45,7 @@ namespace NetTok.Tokenizer.Annotate
     ///         @author Joerg Steffen, DFKI, Robert J. Lebowitz, Finaltouch IT LLC
     ///     </para>
     /// </summary>
-    public interface IAnnotatedString : IEnumerable<char>
+    public interface IAnnotatedString /*: IEnumerable<char>*/
     {
         /// <summary>
         ///     Returns the index of the first character of the run with respect to the given annotation key
@@ -101,19 +101,19 @@ namespace NetTok.Tokenizer.Annotate
         ///     string,
         ///     or beginIndex and endIndex together don't define a non-empty sub-range of the string.
         /// </exception>
-        string SubString(int startIndex, int endIndex);
+        string Substring(int startIndex, int endIndex);
 
         /// <summary>
         ///     Returns the character from the given position without changing the index.
         /// </summary>
-        /// <param name="charIndex">
+        /// <param name="index">
         ///     The index within the text; valid values range from GetBeginIndex to GetEndIndex;
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
         ///     An ArgumentOutOfRangeException is thrown if an invalid value is supplied .
         /// </exception>
         /// <returns>The character at the specified position or if the specified position is equal to GetEndIndex.</returns>
-        char this[int charIndex] { get; }
+        char this[int index] { get; }
 
         /// <summary>
         ///     Returns a string representation of the annotated string with the annotation for the given
@@ -129,16 +129,16 @@ namespace NetTok.Tokenizer.Annotate
         /// <returns>The surface string.</returns>
         string ToString();
         #region CharacterIterator properties
-        char First { get; }
-        char Last { get; }
-        char Next { get; }
-        char Previous { get; }
-        int BeginIndex { get; }
-        int EndIndex { get; }
+        //char First { get; }
+        //char Last { get; }
+        //char Next { get; }
+        //char Previous { get; }
+        //int BeginIndex { get; }
+        //int EndIndex { get; }
         int Index { get; set; }
-
+        int Length { get; }
         char SetIndex(int index);
-        char Current { get; }
+      //  char Current { get; }
         #endregion
     }
 }

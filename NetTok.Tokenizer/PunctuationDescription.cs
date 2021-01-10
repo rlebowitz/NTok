@@ -88,22 +88,22 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     name suffix of the resource file with the punctuation description.
         /// </summary>
-        private const string PunctuationDescriptionSuffix = "_punct.cfg";
+        private const string PunctuationDescriptionSuffix = "punct.cfg";
 
 
         /// <summary>
         ///     Creates a new instance of <seealso cref="PunctuationDescription" /> for the given language.
         /// </summary>
-        /// <param name="lang">The specified language.</param>
+        /// <param name="language">The specified language.</param>
         /// <param name="macrosMap">A map of macro names to regular expression strings.</param>
         /// <exception cref="IOException">If there is an error when reading the configuration </exception>
-        public PunctuationDescription(string lang, IDictionary<string, string> macrosMap)
+        public PunctuationDescription(string language, IDictionary<string, string> macrosMap)
         {
             DefinitionsMap = new Dictionary<string, Regex>();
             RulesMap = new Dictionary<string, Regex>();
             RegExpMap = new Dictionary<Regex, string>();
 
-            using var stream = ResourceMethods.ReadResource(lang, PunctuationDescriptionSuffix);
+            using var stream = ResourceManager.Read(language, PunctuationDescriptionSuffix);
             using var reader = new StreamReader(stream);
             // read config file to definitions start
             ReadToDefinitions(reader);

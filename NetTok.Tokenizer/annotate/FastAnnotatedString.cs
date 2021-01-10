@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using NetTok.Tokenizer.Exceptions;
@@ -44,34 +43,37 @@ namespace NetTok.Tokenizer.Annotate
         private int _index;
 
         /// <summary>
-        ///     Creates a new instance of <seealso cref="FastAnnotatedString" /> for the given input text.
+        ///     Creates a new instance of FastAnnotatedString for the given input text.
         /// </summary>
         /// <param name="inputText">The text to annotate.</param>
         public FastAnnotatedString(string inputText)
         {
-            Guard.NotNull(inputText);
-            _index = 0;
-            EndIndex = inputText.Length;
-            Content = inputText.ToCharArray();
-            Annotations = new Dictionary<string, object>(5);
-            Borders = new Dictionary<string, bool[]>(5);
+//            Content = Guard.NotNull(inputText)?.ToCharArray();
+            Content = Guard.NotNull(inputText);
+            Index = 0;
+//            EndIndex = inputText.Length;
+            Annotations = new Dictionary<string, object>();
+            Borders = new Dictionary<string, bool[]>();
             CurrentKey = null;
             CurrentBorders = null;
             CurrentValues = null;
         }
 
-        // map of annotation keys to arrays of objects holding the annotation values;
-        // the object at a certain index in the array is the annotation value of the corresponding
-        // character in the annotated string
+        /// <summary>
+        ///     The map of annotation keys to arrays of objects holding the annotation values.
+        /// </summary>
+        /// <remarks>
+        ///     The object at a certain index in the array is the annotation value of the corresponding
+        ///     character in the annotated string.
+        /// </remarks>
         public IDictionary<string, object> Annotations { get; }
-
-        // map of annotation keys to arrays of booleans holding annotation borders
 
         public IDictionary<string, bool[]> Borders { get; }
         // index position at the end of the string
 
         // content of the string as a character array
-        public char[] Content { get; }
+        //    public char[] Content { get; }
+        private string Content { get; }
 
         // last annotation key used
         private string CurrentKey { get; set; }
@@ -82,73 +84,69 @@ namespace NetTok.Tokenizer.Annotate
         // last border array used
         private bool[] CurrentBorders { get; set; }
 
-        public char First
-        {
-            get
-            {
-                Index = 0;
-                return Current;
-            }
-        }
+        //public char First
+        //{
+        //    get
+        //    {
+        //        Index = 0;
+        //        return Current;
+        //    }
+        //}
 
-        public char Last
-        {
-            get
-            {
-                if (EndIndex != 0)
-                {
-                    Index = EndIndex - 1;
-                }
-                else
-                {
-                    Index = EndIndex;
-                }
+        //public char Last
+        //{
+        //    get
+        //    {
+        //        if (EndIndex != 0)
+        //        {
+        //            Index = EndIndex - 1;
+        //        }
+        //        else
+        //        {
+        //            Index = EndIndex;
+        //        }
 
-                return Current;
-            }
-        }
+        //        return Current;
+        //    }
+        //}
 
-        public char Next
-        {
-            get
-            {
-                if (Index < EndIndex - 1)
-                {
-                    Index++;
-                    return Content[Index];
-                }
+        //public char Next
+        //{
+        //    get
+        //    {
+        //        if (Index < EndIndex - 1)
+        //        {
+        //            Index++;
+        //            return Content[Index];
+        //        }
 
-                Index = EndIndex;
-                return default;
-            }
-        }
+        //        Index = EndIndex;
+        //        return default;
+        //    }
+        //}
 
-        public char Previous
-        {
-            get
-            {
-                if (Index > 0)
-                {
-                    Index--;
-                    return Content[Index];
-                }
+        //public char Previous
+        //{
+        //    get
+        //    {
+        //        if (Index > 0)
+        //        {
+        //            Index--;
+        //            return Content[Index];
+        //        }
 
-                return default;
-            }
-        }
+        //        return default;
+        //    }
+        //}
 
-        public int BeginIndex => 0;
-
-
-        public int EndIndex { get; }
-
-
+        //public int BeginIndex => 0;
+        public int Length => Content.Length;
         public int Index
         {
             get => _index;
             set
             {
-                if (value < 0 || value > EndIndex)
+                if (value < 0 || value > Content.Length)
                 {
                     throw new IndexOutOfRangeException($"Invalid index {value:D}");
                 }
@@ -157,79 +155,92 @@ namespace NetTok.Tokenizer.Annotate
             }
         }
 
+        public char this[int index] =>
+            //if (index < 0 || index > Content.Length - 1)
+            //{
+            //    throw new ArgumentException($"Invalid index {index:D}");
+            //}
+            index < Content.Length - 1 ? Content[index] : default;
+
         public char SetIndex(int index)
         {
-            if (index < 0 || index > EndIndex)
-            {
-                throw new IndexOutOfRangeException($"Invalid index {index:D}");
-            }
+            //if (index < 0 || index > Content.Length)
+            //{
+            //    throw new IndexOutOfRangeException($"Invalid index {index:D}");
+            //}
 
-            _index = index;
-            return Current;
+            Index = index;
+            return index < Content.Length - 1 ? Content[index] : default;
         }
 
-        public char Current
+        //public char Current
+        //{
+        //    get
+        //    {
+        //        if (Index >= 0 && Index < EndIndex)
+        //        {
+        //            return Content[Index];
+        //        }
+
+        //        return default;
+        //    }
+        //}
+
+        //public virtual char this[int charIndex]
+        //{
+        //    get
+        //    {
+        //        if (charIndex < 0 || charIndex > EndIndex)
+        //        {
+        //            throw new ArgumentException($"Invalid index {charIndex:D}");
+        //        }
+
+        //        if (charIndex < EndIndex)
+        //        {
+        //            return Content[charIndex];
+        //        }
+
+        //        return default;
+        //    }
+        //}
+
+        public string Substring(int start, int end)
         {
-            get
-            {
-                if (Index >= 0 && Index < EndIndex)
-                {
-                    return Content[Index];
-                }
-
-                return default;
-            }
-        }
-
-        public virtual char this[int charIndex]
-        {
-            get
-            {
-                if (charIndex < 0 || charIndex > EndIndex)
-                {
-                    throw new ArgumentException($"Invalid index {charIndex:D}");
-                }
-
-                if (charIndex < EndIndex)
-                {
-                    return Content[charIndex];
-                }
-
-                return default;
-            }
-        }
-
-        public string SubString(int start, int end)
-        {
-            if (start < 0 || end > EndIndex || start > end)
+            if (start < 0 || end > Content.Length || start > end)
             {
                 throw new ArgumentException($"Invalid substring range {start:D} - {end:D}");
             }
 
-            return new string(Content, start, end - start);
+            //           return new string(Content, start, end - start);
+            return Content[start..end];
         }
 
 
         public void Annotate(string key, object value, int start, int end)
         {
             // check if range is legal
-            if (start < 0 || end > EndIndex || start >= end)
+            if (start < 0 || end > Content.Length || start > end)
             {
                 throw new ArgumentException($"Invalid substring range {start:D} - {end:D}");
             }
 
             if (!key.Equals(CurrentKey))
             {
+                object probe = null;
                 // update currents
-                var probe = Annotations[key];
-                if (null == probe)
+                if (Annotations.ContainsKey(key))
+                {
+                    probe = Annotations[key];
+                }
+
+                if (probe == null)
                 {
                     // create new arrays for this key
-                    CurrentValues = new object[EndIndex];
-                    CurrentBorders = new bool[EndIndex];
+                    CurrentValues = new object[Content.Length];
+                    CurrentBorders = new bool[Content.Length];
                     CurrentKey = key;
                     // if string is not empty, the first character is already a border
-                    if (EndIndex > 0)
+                    if (Content.Length > 0)
                     {
                         CurrentBorders[0] = true;
                     }
@@ -255,7 +266,7 @@ namespace NetTok.Tokenizer.Annotate
 
             // set border for current annotation and the implicit next annotation (if there is one)
             CurrentBorders[start] = true;
-            if (end < EndIndex)
+            if (end < Content.Length)
             {
                 CurrentBorders[end] = true;
             }
@@ -263,7 +274,7 @@ namespace NetTok.Tokenizer.Annotate
 
         public object GetAnnotation(string key)
         {
-            if (Index < 0 || Index >= EndIndex)
+            if (Index < 0 || Index >= Content.Length)
             {
                 return null;
             }
@@ -289,10 +300,7 @@ namespace NetTok.Tokenizer.Annotate
         }
 
 
-        /// <summary>
-        ///     {@inheritDoc}
-        /// </summary>
-        public virtual int GetRunStart(string key)
+        public int GetRunStart(string key)
         {
             if (!key.Equals(CurrentKey))
             {
@@ -323,10 +331,7 @@ namespace NetTok.Tokenizer.Annotate
         }
 
 
-        /// <summary>
-        ///     {@inheritDoc}
-        /// </summary>
-        public virtual int GetRunLimit(string key)
+        public int GetRunLimit(string key)
         {
             if (!key.Equals(CurrentKey))
             {
@@ -340,12 +345,12 @@ namespace NetTok.Tokenizer.Annotate
                 }
                 else
                 {
-                    return EndIndex;
+                    return Content.Length;
                 }
             }
 
             // search border
-            for (var i = Index + 1; i < EndIndex; i++)
+            for (var i = Index + 1; i < Content.Length; i++)
             {
                 if (CurrentBorders[i])
                 {
@@ -353,13 +358,9 @@ namespace NetTok.Tokenizer.Annotate
                 }
             }
 
-            return EndIndex;
+            return Content.Length;
         }
 
-
-        /// <summary>
-        ///     {@inheritDoc}
-        /// </summary>
         public virtual int FindNextAnnotation(string key)
         {
             if (!key.Equals(CurrentKey))
@@ -374,17 +375,17 @@ namespace NetTok.Tokenizer.Annotate
                 }
                 else
                 {
-                    return EndIndex;
+                    return Content.Length;
                 }
             }
 
             // search next annotation
             int i;
-            for (i = Index + 1; i < EndIndex; i++)
+            for (i = Index + 1; i < Content.Length; i++)
             {
                 if (CurrentBorders[i])
                 {
-                    for (var j = i; j < EndIndex; j++)
+                    for (var j = i; j < Content.Length; j++)
                     {
                         if (null != CurrentValues[j])
                         {
@@ -392,14 +393,14 @@ namespace NetTok.Tokenizer.Annotate
                         }
                     }
 
-                    return EndIndex;
+                    return Content.Length;
                 }
             }
 
-            return EndIndex;
+            return Content.Length;
         }
 
-        public virtual string ToString(string key)
+        public string ToString(string key)
         {
             // init result
             var result = new StringBuilder();
@@ -407,13 +408,13 @@ namespace NetTok.Tokenizer.Annotate
             var backUp = Index;
             // iterate over string
             Index = 0;
-            while (Index < EndIndex)
+            while (Index < Content.Length)
             {
                 var endAnnotation = GetRunLimit(key);
                 if (null != GetAnnotation(key))
                 {
                     result.Append(
-                        $"{SubString(Index, endAnnotation)}\\t{Index}-{endAnnotation}\\t{GetAnnotation(key)}{Environment.NewLine}");
+                        $"{Substring(Index, endAnnotation)}\t{Index}-{endAnnotation}\t{GetAnnotation(key)}{Environment.NewLine}");
                 }
 
                 Index = endAnnotation;
@@ -425,20 +426,20 @@ namespace NetTok.Tokenizer.Annotate
             return result.ToString();
         }
 
-        public IEnumerator<char> GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
+        //public IEnumerator<char> GetEnumerator()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         public override string ToString()
         {
             return new string(Content);
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        //IEnumerator IEnumerable.GetEnumerator()
+        //{
+        //    return GetEnumerator();
+        //}
 
         // public char setIndex(int position)
         //{

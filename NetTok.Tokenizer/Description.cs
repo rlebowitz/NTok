@@ -90,7 +90,7 @@ namespace NetTok.Tokenizer
         public const string RulesMarker = "RULES:";
 
         // regular expression for matching references used in regular expressions of config files
-        private static readonly Regex ReferencesMatcher = new Regex("\\<[A-Za-z0-9_]+\\>");
+        private static readonly Regex ReferencesRegex = new Regex("\\<[A-Za-z0-9_]+\\>");
 
         /// <returns> the definitions map </returns>
         public Dictionary<string, Regex> DefinitionsMap { get; set; }
@@ -105,59 +105,51 @@ namespace NetTok.Tokenizer
         public virtual Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
 
         /// <summary>
-        ///     Reads the macro configuration from the given path and adds it to the given map.
+        ///     Reads the embedded macro configuration file for the specified language and adds its data to the specified map.
         /// </summary>
-        /// <param name="language"></param>
-        /// <param name="fileName"></param>
-        /// <param name="macroMap">
-        ///     a map of macro names to regular expression strings
-        /// </param>
-        /// <returns> the extended map </returns>
+        /// <param name="language">The specified language.</param>
+        /// <param name="fileName">The specified embedded resource file.</param>
+        /// <param name="macroMap">A map of macro names to regular expression pattern strings.</param>
+        /// <returns>The populated class map.</returns>
         /// <exception cref="IOException">
         ///     if there is an error when reading the configuration
         /// </exception>
         public static IDictionary<string, string> LoadMacros(string language, string fileName,
             Dictionary<string, string> macroMap)
         {
-            var stream = ResourceMethods.ReadResource(language, fileName);
-            var reader = new StreamReader(stream);
+            Guard.NotNull(fileName);
+            Guard.NotNull(macroMap);
+            using var reader = new StreamReader(ResourceManager.Read(language, fileName));
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine()?.Trim()) != null)
             {
-                line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                var sep = line.IndexOf(":", StringComparison.Ordinal);
-                if (sep == -1)
+                var separator = line.IndexOf(":", StringComparison.Ordinal);
+                if (separator == -1)
                 {
                     throw new InitializationException(
-                        $"There is a missing separator in macros configuration line {line}");
+                        $"There is a missing separator in file: {fileName} at line: {line}");
                 }
 
-                var macroName = line.Substring(0, sep).Trim();
-                var regExpString = line[(sep + 1)..].Trim();
+                var macroName = line.Substring(0, separator).Trim();
+                var regularExpressionString = line[(separator + 1)..].Trim();
                 // expand possible macros
-                regExpString = ReplaceReferences(regExpString, macroMap);
-                macroMap[macroName] = regExpString;
+                regularExpressionString = ReplaceReferences(regularExpressionString, macroMap);
+                macroMap[macroName] = regularExpressionString;
             }
 
             return macroMap;
         }
 
-
         /// <summary>
-        ///     Reads from the given reader until the lists section starts. Immediately returns if the reader
-        ///     is {@code null}.
+        ///     Reads from the given reader to the start of the LISTS: section or if the reader returns null.
         /// </summary>
-        /// <param name="reader">
-        ///     the reader
-        /// </param>
-        /// <exception cref="IOException">
-        ///     if there is an error when reading
-        /// </exception>
+        /// <param name="reader">The specified reader</param>
+        /// <exception cref="IOException">Thrown if an error occurs while reading the embedded resource file.</exception>
         public static void ReadToLists(StreamReader reader)
         {
             Guard.NotNull(reader);
@@ -167,7 +159,7 @@ namespace NetTok.Tokenizer
                 line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                 {
-                    continue;
+                    continue; // skip any blank lines or comment lines.
                 }
 
                 if (line.Equals(ListsMarker))
@@ -179,25 +171,19 @@ namespace NetTok.Tokenizer
 
 
         /// <summary>
-        ///     Reads from the given reader until the definitions section starts. Immediately returns if the
-        ///     reader is {@code null}.
+        ///     Reads from the given reader to the start of the DEFINITIONS: section or the reader returns null.
         /// </summary>
-        /// <param name="reader">
-        ///     the reader
-        /// </param>
-        /// <exception cref="IOException">
-        ///     if there is an error when reading
-        /// </exception>
+        /// <param name="reader">The specified StreamReader.</param>
+        /// <exception cref="IOException">Thrown if there is an error occurs while reading when reading the configuration file.</exception>
         public static void ReadToDefinitions(StreamReader reader)
         {
             Guard.NotNull(reader);
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine()?.Trim()) != null)
             {
-                line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                 {
-                    continue;
+                    continue; // skip any blank lines or comment lines.
                 }
 
                 if (line.Equals(DefinitionsMarker))
@@ -207,44 +193,31 @@ namespace NetTok.Tokenizer
             }
         }
 
-
         /// <summary>
-        ///     Reads the definitions section from the given reader to map each token class from the
-        ///     definitions to a regular expression that matches all tokens of that class. Also extends the
-        ///     given definitions map.
-        ///     <br />
-        ///     Immediately returns if the reader is {@code null}.
+        ///     Reads the DEFINITIONS: section from the given reader to map each token class from the
+        ///     definitions to a regular expression that matches all tokens of that class.
         /// </summary>
-        /// <param name="reader">
-        ///     the reader
-        /// </param>
-        /// <param name="macrosMap">
-        ///     a map of macro names to regular expression strings
-        /// </param>
-        /// <param name="defMap">
-        ///     a map of definition names to regular expression strings
-        /// </param>
+        /// <param name="reader">The specified StreamReader</param>
+        /// <param name="macrosMap">The specified macro map of names to regular expression pattern strings.</param>
+        /// <param name="definitionMap">The specified map of macro definition names to regular expression pattern strings.</param>
         /// <exception cref="IOException">
         ///     if there is an error during reading
         /// </exception>
-        /// <exception cref="InitializationException">
-        ///     if configuration fails
-        /// </exception>
-        public virtual void LoadDefinitions(StreamReader reader, IDictionary<string, string> macrosMap,
-            IDictionary<string, string> defMap)
+        public void LoadDefinitions(StreamReader reader, IDictionary<string, string> macrosMap,
+            IDictionary<string, string> definitionMap)
         {
             Guard.NotNull(reader);
-            // init temporary map where to store the regular expression string
-            // for each class
-            IDictionary<string, StringBuilder> tempMap = new Dictionary<string, StringBuilder>();
+            Guard.NotNull(macrosMap);
+            Guard.NotNull(definitionMap);
+            // init temporary map where to store the regular expression string for each class
+            IDictionary<string, StringBuilder> map = new Dictionary<string, StringBuilder>();
 
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine()?.Trim()) != null)
             {
-                line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                 {
-                    continue;
+                    continue; // skip blank lines and comments
                 }
 
                 if (line.Equals(RulesMarker))
@@ -252,154 +225,119 @@ namespace NetTok.Tokenizer
                     break;
                 }
 
-                var firstSep = line.IndexOf(":", StringComparison.Ordinal);
-                var secondSep = line.LastIndexOf(":", StringComparison.Ordinal);
-                if (firstSep == -1 || secondSep == firstSep)
+                var sections = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                if (!line.StartsWith("COLON") && sections.Length != 3)
                 {
-                    throw new InitializationException($"missing separator in definitions section line {line}");
+                    throw new InitializationException($"Line: {line} is not properly formatted as a Definitions line.");
                 }
 
-                var defName = line.Substring(0, firstSep).Trim();
-                var regExpString = line[(firstSep + 1)..secondSep].Trim();
-                var className = line[(secondSep + 1)..].Trim();
+                if (line.StartsWith("COLON"))
+                {
+                    // special case
+                    sections = new [] {"COLON", ":", "COLON"};
+                }
 
+                var definitionName = sections[0].Trim();
+                var regularExpressionPattern = sections[1].Trim();
+                var className = sections[2].Trim();
                 // expand possible macros
-                regExpString = ReplaceReferences(regExpString, macrosMap);
-
+                regularExpressionPattern = ReplaceReferences(regularExpressionPattern, macrosMap);
                 // check for empty regular expression
-                if (regExpString.Length == 0)
+                if (regularExpressionPattern.Length == 0)
                 {
                     throw new ProcessingException($"empty regular expression in line {line}");
                 }
 
-                // extend class matcher:
-                // get old entry
-                var oldRegExpr = tempMap[className];
-                // if there is no old entry create a new one
-                if (null == oldRegExpr)
+                switch (map.ContainsKey(className))
                 {
-                    var newRegExpr = new StringBuilder(regExpString);
-                    tempMap[className] = newRegExpr;
-                }
-                else
-                {
-                    // extend regular expression with another disjunct
-                    oldRegExpr.Append("|" + regExpString);
+                    case false:
+                    {
+                        // if there is no old entry, create a new one
+                        var newRegExpr = new StringBuilder(regularExpressionPattern);
+                        map[className] = newRegExpr;
+                        break;
+                    }
+                    default:
+                        // extend regular expression pattern with another disjunct
+                        map[className].Append('|').Append(regularExpressionPattern);
+                        break;
                 }
 
                 // save definition
-                defMap[defName] = regExpString;
+                definitionMap[definitionName] = regularExpressionPattern;
             }
 
-            // create regular expressions from regular expression strings and store them
-            // under their class name in definitions map
-            foreach (var oneEntry in tempMap)
+            // create regular expressions from regular expression pattern strings and store them
+            // in the definitions map
+            foreach (var (key, value) in map)
             {
-                try
-                {
-                    DefinitionsMap[oneEntry.Key] = new Regex(oneEntry.Value.ToString());
-                }
-                catch (Exception e)
-                {
-                    throw new ProcessingException(
-                        $"Cannot create regular expression for {oneEntry.Key} from {oneEntry.Value}: {e.Message}");
-                }
+                DefinitionsMap[key] = new Regex(value.ToString());
             }
         }
 
-
         /// <summary>
-        ///     Reads the rules section from the given reader to map each rules to a regular expression that
-        ///     matches all tokens of that rule.
-        ///     <br />
-        ///     Immediately returns if the reader is {@code null}.
+        ///     Reads the RULES: section from the given embedded configuration file to map each rule to a regular expression
+        ///     pattern
+        ///     that matches all tokens of that rule.
         /// </summary>
-        /// <param name="reader">
-        ///     the reader
-        /// </param>
-        /// <param name="definitionsMap">
-        ///     a map of definition names to regular expression strings
-        /// </param>
-        /// <param name="macrosMap">
-        ///     a map of macro names to regular expression strings
-        /// </param>
-        /// <exception cref="IOException">
-        ///     if there is an error during reading
-        /// </exception>
-        /// <exception cref="InitializationException">
-        ///     if configuration fails
-        /// </exception>
+        /// <param name="reader">The specified StreamReader</param>
+        /// <param name="definitionsMap">The specified map of definition names to regular expression pattern strings</param>
+        /// <param name="macrosMap">The specified map of macro names to regular expression pattern strings.</param>
+        /// <exception cref="IOException">Thrown if there an error occurs while reading the embedded configuration file.</exception>
         public virtual void LoadRules(StreamReader reader, IDictionary<string, string> definitionsMap,
             IDictionary<string, string> macrosMap)
         {
             Guard.NotNull(reader);
+            Guard.NotNull(definitionsMap);
+            Guard.NotNull(macrosMap);
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine()?.Trim()) != null)
             {
-                line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                 {
-                    continue;
+                    continue; // skip any blank or comment lines.
                 }
 
-                var firstSep = line.IndexOf(":", StringComparison.Ordinal);
-                var secondSep = line.LastIndexOf(":", StringComparison.Ordinal);
-                if (firstSep == -1 || secondSep == firstSep)
+                var sections = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                if (sections.Length != 3)
                 {
-                    throw new InitializationException(
-                        $"Missing separator in rules section line {line}");
+                    throw new InitializationException($"Line: {line} is not properly formatted as a Rules line.");
                 }
 
-                var ruleName = line.Substring(0, firstSep).Trim();
-                var regExpString = line[(firstSep + 1)..secondSep].Trim();
-                if (secondSep + 1 >= 0 && line.Length > secondSep + 1)
+                var ruleName = sections[0].Trim();
+                var regularExpressionPattern = sections[1].Trim();
+                var className = sections[2].Trim();
+                // expand definitions
+                regularExpressionPattern = ReplaceReferences(regularExpressionPattern, definitionsMap);
+                // expand possible macros
+                regularExpressionPattern = ReplaceReferences(regularExpressionPattern, macrosMap);
+                // add rule to map
+                var regularExpression = new Regex(regularExpressionPattern, RegexOptions.Compiled);
+                RulesMap[ruleName] = regularExpression;
+                // if rule has a class, add regular expression to regular expression map
+                if (className.Length > 0)
                 {
-                    var className = line[(secondSep + 1)..].Trim();
-
-                    // expand definitions
-                    regExpString = ReplaceReferences(regExpString, definitionsMap);
-                    // expand possible macros
-                    regExpString = ReplaceReferences(regExpString, macrosMap);
-
-                    // add rule to map
-                    var regExp = new Regex(regExpString, RegexOptions.Compiled);
-                    RulesMap[ruleName] = regExp;
-                    // if rule has a class, add regular expression to regular expression map
-                    if (className.Length > 0)
-                    {
-                        RegExpMap[regExp] = className;
-                    }
+                    RegExpMap[regularExpression] = className;
                 }
             }
         }
 
-
         /// <summary>
         ///     Reads the lists section from the given reader to map each token class from the lists to a set
         ///     that contains all members of that class.
-        ///     <br />
-        ///     Immediately returns if the reader is {@code null}.
         /// </summary>
-        /// <param name="reader">
-        ///     the reader
-        /// </param>
-        /// <exception cref="IOException">
-        ///     if there is an error during reading
-        /// </exception>
-        /// <exception cref="InitializationException">
-        ///     if configuration fails
-        /// </exception>
+        /// <param name="reader">The specified StreamReader.</param>
+        /// <exception cref="IOException">Thrown if an error occurs while reading the embedded configuration file.</exception>
+        /// <exception cref="InitializationException">Thrown if the configuration fails.</exception>
         public void LoadLists(StreamReader reader)
         {
             Guard.NotNull(reader);
-
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine()?.Trim()) != null)
             {
-                line = line.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                 {
-                    continue;
+                    continue; // skip blank and comment lines.
                 }
 
                 if (line.Equals(DefinitionsMarker))
@@ -407,133 +345,98 @@ namespace NetTok.Tokenizer
                     break;
                 }
 
-                var separator = line.IndexOf(":", StringComparison.Ordinal);
-                if (separator == -1)
+                var sections = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                if (sections.Length != 2)
                 {
-                    throw new InitializationException($"Missing separator in lists section line {line}");
+                    throw new InitializationException($"Line: {line} is not properly formatted as a Lists line.");
                 }
 
-                var listFileName = line.Substring(0, separator).Trim();
-                var className = line[(separator + 1)..].Trim();
-                LoadList(listFileName, className);
+                var abbreviationsListFileName = sections[0].Trim();
+                var className = sections[1].Trim();
+                LoadList(abbreviationsListFileName, className);
             }
         }
 
-
         /// <summary>
-        ///     Loads the abbreviations list from the given path and stores its items under the given classname
+        ///     Loads the abbreviations list from the given path and stores its items under the given classname.
         /// </summary>
-        /// <param name="listFileName">the abbreviations list path</param>
-        /// <param name="className">The class name.</param>
-        /// <exception cref="IOException">
-        ///     if there is an error when reading the list
-        /// </exception>
-        private void LoadList(string listFileName, string className)
+        /// <param name="abbreviationsListFileName">The specified embedded abbreviations list file name.</param>
+        /// <param name="className">The specified class name.</param>
+        /// <exception cref="IOException">Thrown if an error occurs when reading the list file.</exception>
+        private void LoadList(string abbreviationsListFileName, string className)
         {
-            var reader = new StreamReader(ResourceMethods.ReadResource(listFileName));
-            // init set where to store the abbreviations
-            var items = new HashSet<string>();
+            Guard.NotNull(abbreviationsListFileName);
+            Guard.NotNull(className);
+            using var reader = new StreamReader(ResourceManager.Read(abbreviationsListFileName));
+            // initialize the HashSet in which the abbreviations will be stored.
+            var abbreviations = new HashSet<string>();
             // iterate over lines of file
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine()?.Trim()) != null)
             {
-                line = line.Trim();
-                // ignore lines starting with #
                 if (line.StartsWith("#", StringComparison.Ordinal) || line.Length == 0)
+                {
+                    continue; // skip blank and comment lines.
+                }
+
+                var sections = line.Split('#', StringSplitOptions.RemoveEmptyEntries);
+                if (sections.Length == 0)
                 {
                     continue;
                 }
 
-                // extract the abbreviation and add it to the set
-                var end = line.IndexOf('#');
-                if (-1 != end)
-                {
-                    line = line.Substring(0, end).Trim();
-                    if (line.Length == 0)
-                    {
-                        continue;
-                    }
-                }
-
-                items.Add(line);
+                abbreviations.Add(sections[0]);
                 // also add the upper case version
-                items.Add(line.ToUpper());
-                // also add a version with the first letter in
-                // upper case (if required)
-                var firstChar = line[0];
-                if (char.IsLower(firstChar))
-                {
-                    firstChar = char.ToUpper(firstChar);
-                    items.Add(firstChar + line.Substring(1));
-                }
+                abbreviations.Add(sections[0].ToUpper());
+                // also add a version with the first letter in upper case
+                abbreviations.Add($"{char.ToUpper(sections[0][0])}{sections[0][1..]}");
             }
 
-            reader.Close();
             // add set to lists map
-            ClassMembersMap[className] = items;
+            ClassMembersMap[className] = abbreviations;
         }
-
 
         /// <summary>
         ///     Replaces references in the given regular expression string using the given reference map.
         /// </summary>
-        /// <param name="regExpString">
-        ///     the regular expression string with possible references
+        /// <param name="regexPattern">
+        ///     The string that may contain references to other regular expression patterns.
         /// </param>
-        /// <param name="refMap">A map of reference name to regular expression strings</param>
+        /// <param name="referenceMap">A map of reference name to regular expression pattern strings.</param>
         /// <returns>The modified regular expression string.</returns>
-        private static string ReplaceReferences(string regExpString, IDictionary<string, string> refMap)
+        private static string ReplaceReferences(string regexPattern, IDictionary<string, string> referenceMap)
         {
-            var result = regExpString;
-
-            //   var references = _referencesMatcher.GetAllMatches(regExpString);
-            var matches = ReferencesMatcher.Matches(regExpString);
-            var references = matches.Select(match => match).ToList();
+            var result = regexPattern;
+            var matches = ReferencesRegex.Matches(regexPattern); // searches for strings enclosed by angle brackets <>
+            var references = matches.ToList();
 
             foreach (var reference in references)
             {
-                // get reference name by removing opening and closing angle brackets
-                var refName = reference.Value[1..^1];
-                var refRegExpr = refMap[refName];
-                if (null == refRegExpr)
+                var name = reference.Value[1..^1]; // get reference name by removing opening and closing angle brackets
+                if (!referenceMap.ContainsKey(name))
                 {
-                    throw new ProcessingException($"unknown reference {refName} in regular expression {regExpString}");
+                    throw new ProcessingException($"The reference: {name} was not found in the reference map.");
                 }
 
                 //result = result.replaceFirst(reference.Image,
                 //    string.Format("({0})", Matcher.quoteReplacement(refRegExpr)));
                 // ToDo - not sure exactly what the above lines do, this is my best guess:
-                var regex = new Regex(reference.Value);
-                result = regex.Replace(result, $"({refRegExpr})", 1);
+                var regex = new Regex(reference.Value); // the full name of the reference with angle brackets
+                result = regex.Replace(result, $"({referenceMap[name]})", 1);
             }
 
             return result;
         }
 
-
         /// <summary>
         ///     Creates a rule that matches ALL definitions.
         /// </summary>
-        /// <param name="definitionsMap">The definitions map.</param>
-        /// <returns> a regular expression matching all definitions </returns>
-        public Regex CreateAllRule(IDictionary<string, string> definitionsMap)
+        /// <param name="definitionsMap">The specified definitions map.</param>
+        /// <returns>A Regex matching all definitions.</returns>
+        public static Regex CreateAllRule(IDictionary<string, string> definitionsMap)
         {
-            var ruleRegExpr = new StringBuilder();
-
-            // iterate over definitions
             IList<string> definitionsList = new List<string>(definitionsMap.Values);
-            for (int i = 0, iMax = definitionsList.Count; i < iMax; i++)
-            {
-                var regularExpression = definitionsList[i];
-                // extend regular expression with another disjunct
-                ruleRegExpr.Append($"({regularExpression})");
-                if (i < iMax - 1)
-                {
-                    ruleRegExpr.Append("|");
-                }
-            }
-
-            return new Regex(ruleRegExpr.ToString());
+            return new Regex(string.Join('|', definitionsList), RegexOptions.Compiled);
         }
     }
 }

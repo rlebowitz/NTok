@@ -42,7 +42,7 @@ namespace NetTok.Tokenizer
 
 
         // name suffix of the resource file with the token classes description
-        private const string ClassDescription = "_classes.cfg";
+        private const string ClassDescription = "classes.cfg";
 
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace NetTok.Tokenizer
             RulesMap = new Dictionary<string, Regex>();
             RegExpMap = new Dictionary<Regex, string>();
 
-            using var stream = ResourceMethods.ReadResource(language, ClassDescription);
+            using var stream = ResourceManager.Read(language, ClassDescription);
             using var reader = new StreamReader(stream);
             // read config file to definitions start
             ReadToDefinitions(reader);

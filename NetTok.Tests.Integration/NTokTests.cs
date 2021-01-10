@@ -54,85 +54,92 @@ namespace NetTok.Tests.Integration
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public void TestGerman()
         {
-            CompareResults("german/amazon.txt", "de", "expected-results/german/amazon-expected.txt");
-            CompareResults("german/german.txt", "de", "expected-results/german/german-expected.txt");
+            CompareResults("amazon.txt", "de", "amazon-expected.txt");
+            CompareResults("german.txt", "de", "german-expected.txt");
         }
 
 
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public void TestEnglish()
         {
             // English
-            CompareResults("english/amazon-coleman.txt", "en", "expected-results/english/amazon-coleman-expected.txt");
-            CompareResults("english/english.txt", "en", "expected-results/english/english-expected.txt");
-            CompareResults("english/randomhouse-hertsgaard.txt", "en",
-                "expected-results/english/randomhouse-hertsgaard-expected.txt");
+            CompareResults("amazon-coleman.txt", "en", "amazon-coleman-expected.txt");
+            CompareResults("english.txt", "en", "english-expected.txt");
+            CompareResults("randomhouse-hertsgaard.txt", "en", "randomhouse-hertsgaard-expected.txt");
         }
 
 
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public void TestClitics()
         {
             // Other
-            CompareResults("test/cliticsTest.txt", "en", "expected-results/test/cliticsTest-expected.txt");
+            CompareResults("cliticsTest.txt", "en", "cliticsTest-expected.txt");
         }
 
 
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public void TestMisc()
         {
-            CompareResults("test/misc.txt", "en", "expected-results/test/misc-expected.txt");
+            CompareResults("misc.txt", "en", "misc-expected.txt");
         }
 
 
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public void TestNumbers()
         {
-            CompareResults("test/numbersTest.txt", "de", "expected-results/test/numbersTest-expected.txt");
+            CompareResults("numbersTest.txt", "de", "numbersTest-expected.txt");
         }
 
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public void TestParagraphs()
         {
-            CompareResults("test/paragraphTest.txt", "en", "expected-results/test/paragraphTest-expected.txt");
+            CompareResults("paragraphTest.txt", "en", "paragraphTest-expected.txt");
         }
 
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public virtual void TestPunctuation()
         {
-            CompareResults("test/punctuationTest.txt", "en", "expected-results/test/punctuationTest-expected.txt");
+            CompareResults("punctuationTest.txt", "en", "punctuationTest-expected.txt");
         }
 
         /// <summary>
-        ///     Tests the method <seealso cref="JTok.tokenize(string, string)" />.
+        ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public virtual void TestSpecialCharacters()
         {
-            CompareResults("test/specialCharactersTest.txt", "de",
-                "expected-results/test/specialCharactersTest-expected.txt");
+            CompareResults("specialCharactersTest.txt", "de", "specialCharactersTest-expected.txt");
         }
 
 
         /// <summary>
-        ///     Tests the method <seealso cref="JTok.tokenize(string, string)" />.
+        ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
         /// </summary>
+        [Fact]
         public virtual void TestTextUnits()
         {
-            CompareResults("test/tuTest.txt", "de", "expected-results/test/tuTest-expected.txt");
+            CompareResults("tuTest.txt", "de", "tuTest-expected.txt");
         }
 
 
@@ -153,7 +160,7 @@ namespace NetTok.Tests.Integration
         {
             Console.WriteLine(inputFileName);
             // tokenize input file
-            using var reader = new StreamReader(ResourceMethods.ReadResource(inputFileName));
+            using var reader = new StreamReader(ResourceManager.Read(inputFileName));
             var input = new string(reader.ReadToEnd());
             var result = new StringBuilder();
             // print result as paragraphs with text units and tokens
@@ -163,8 +170,8 @@ namespace NetTok.Tests.Integration
             }
 
             // compare line by line with expected result
-            using var inputReader = new StreamReader(ResourceMethods.ReadResource(inputFileName));
-            using var resourceReader = new StreamReader(ResourceMethods.ReadResource(fileName));
+            using var inputReader = new StreamReader(ResourceManager.Read(inputFileName));
+            using var resourceReader = new StreamReader(ResourceManager.Read(fileName));
             var lineCount = 1;
             string resLine;
             while ((resLine = resourceReader.ReadLine()) != null)

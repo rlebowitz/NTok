@@ -56,14 +56,14 @@ namespace NetTok.Tests.Integration
             input1.Annotate("type", "tok", 8, 9);
             input1.Annotate("type", "tok", 10, 14);
             input1.Annotate("type", "punct", 14, 15);
-            CompareResults(input1, "expected-results/annotated-string-expected-1.txt");
+            CompareResults(input1, "annotated-string-expected-1.txt");
 
             var input2 = new FastAnnotatedString("sdfslkdflsdfsldfksdf");
             input2.Annotate("type", "tok", 5, 15);
             Assert.Equal("kdflsdfsld\t5-15\ttok", input2.ToString("type").Trim());
 
             input2.Annotate("type", "mid", 9, 12);
-            CompareResults(input2, "expected-results/annotated-string-expected-2.txt");
+            CompareResults(input2, "annotated-string-expected-2.txt");
         }
 
 
@@ -82,7 +82,7 @@ namespace NetTok.Tests.Integration
         /// </exception>
         private void CompareResults(IAnnotatedString input, string fileName)
         {
-            using var resReader = new StreamReader(ResourceMethods.ReadResource(fileName));
+            using var resReader = new StreamReader(ResourceManager.Read(fileName));
             using var inputReader = new StringReader(input.ToString("type"));
             // compare line by line with expected result
             var lineCount = 1;

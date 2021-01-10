@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Annotate\CharacterEnumerable.cs" />
     <Compile Remove="FileTools.cs" />
     <Compile Remove="Match.cs" />
     <Compile Remove="RegExp\DkBricsRegExp.cs" />

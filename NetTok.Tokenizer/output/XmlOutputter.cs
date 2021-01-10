@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Reflection.Metadata;
+using System.Xml;
 using System.Xml.Linq;
-using Microsoft.Extensions.Logging;
 using NetTok.Tokenizer.Annotate;
 using NetTok.Tokenizer.Exceptions;
 
@@ -33,292 +32,185 @@ using NetTok.Tokenizer.Exceptions;
 
 namespace NetTok.Tokenizer.Output
 {
+    /// <summary>
+    ///     XmlOutputter provides static methods that return an XML presentation of an IAnnotatedString.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public static class XmlOutputter
+    {
+        /// <summary>
+        ///     name of XML elements in the result that describe a document
+        /// </summary>
+        public const string XMLDocument = "Document";
 
-	/// <summary>
-	/// <seealso cref="XmlOutputter"/> provides static methods that return an XML presentation of an
-	/// <seealso cref="IAnnotatedString"/>.
-	/// @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
-	/// </summary>
-	public static class XmlOutputter
-	{
+        /// <summary>
+        ///     name of XML elements in the result that describe a paragraph
+        /// </summary>
+        public const string XMLParagraph = "p";
 
-	  /// <summary>
-	  /// name of XML elements in the result that describe a document </summary>
-	  public const string XMLDocument = "Document";
+        /// <summary>
+        ///     name of XML elements in the result that describe a text unit; text units are contained in
+        ///     paragraphs
+        /// </summary>
+        public const string XMLTextUnit = "tu";
 
-	  /// <summary>
-	  /// name of XML elements in the result that describe a paragraph </summary>
-	  public const string XMLParagraph = "p";
+        /// <summary>
+        ///     name of the XML attribute in {@code XML_TEXT_UNIT} that contains the text unit id
+        /// </summary>
+        public const string IdAttribute = "id";
 
-	  /// <summary>
-	  /// name of XML elements in the result that describe a text unit; text units are contained in
-	  /// paragraphs
-	  /// </summary>
-	  public const string XMLTextUnit = "tu";
+        /// <summary>
+        ///     name of XML elements in the result that describe a token; tokens are contained in text units
+        /// </summary>
+        public const string XMLToken = "Token";
 
-	  /// <summary>
-	  /// name of the XML attribute in {@code XML_TEXT_UNIT} that contains the text unit id </summary>
-	  public const string IdAttribute = "id";
+        /// <summary>
+        ///     name of the XML attribute in {@code XML_TOKEN} that contains the token image
+        /// </summary>
+        public const string ImageAttribute = "string";
 
-	  /// <summary>
-	  /// name of XML elements in the result that describe a token; tokens are contained in text units
-	  /// </summary>
-	  public const string XMLToken = "Token";
+        /// <summary>
+        ///     name of the XML attribute in {@code XML_TOKEN} that contains the Penn Treebank token image if
+        ///     it is any different than the regular surface string
+        /// </summary>
+        public const string PennTreeBankAttribute = "ptb";
 
-	  /// <summary>
-	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token image </summary>
-	  public const string ImageAttribute = "string";
+        /// <summary>
+        ///     name of the XML attribute in {@code XML_TOKEN} that contains the token type
+        /// </summary>
+        public const string TokenTypeAttribute = "type";
 
-	  /// <summary>
-	  /// name of the XML attribute in {@code XML_TOKEN} that contains the Penn Treebank token image if
-	  /// it is any different than the regular surface string
-	  /// </summary>
-	  public const string PennTreeBankAttribute = "ptb";
+        /// <summary>
+        ///     name of the XML attribute in {@code XML_TOKEN} that contains the token offset
+        /// </summary>
+        public const string OffsetAttribute = "offset";
 
-	  /// <summary>
-	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token type </summary>
-	  public const string TokenTypeAttribute = "type";
+        /// <summary>
+        ///     name of the XML attribute in {@code XML_TOKEN} that contains the token length
+        /// </summary>
+        public const string LengthAttribute = "length";
 
-	  /// <summary>
-	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token offset </summary>
-	  public const string OffsetAttribute = "offset";
+        /// <summary>
+        ///     Creates an XML document from the given annotated string.
+        /// </summary>
+        /// <param name="input">The annotated string.</param>
+        /// <returns>The XDocument.</returns>
+        /// <exception cref="ProcessingException">if an error occurs </exception>
+        public static XDocument CreateXmlDocument(IAnnotatedString input)
+        {
+            // create result document
+            var doc = new XDocument(new XElement(XMLDocument));
+            var root = doc.Root;
+            // init text unit counter
+            var tuId = 0;
+            // create paragraph element
+            var p = new XElement(XMLParagraph);
+            // create text unit element
+            var tu = new XElement(XMLTextUnit, new XAttribute(IdAttribute, Convert.ToString(tuId)));
+            // iterate over tokens and create XML elements
+            var c = input.SetIndex(0);
+            while (c != default)
+            {
+                var tokenStart = input.GetRunStart(NTok.ClassAnnotation);
+                var tokenEnd = input.GetRunLimit(NTok.ClassAnnotation);
+                // check if c belongs to a token
+                if (null != input.GetAnnotation(NTok.ClassAnnotation))
+                {
+                    // get tag
+                    var type = (string) input.GetAnnotation(NTok.ClassAnnotation);
+                    if (null == type)
+                    {
+                        throw new ProcessingException($"Undefined class {input.GetAnnotation(NTok.ClassAnnotation)}");
+                    }
 
-	  /// <summary>
-	  /// name of the XML attribute in {@code XML_TOKEN} that contains the token length </summary>
-	  public const string LengthAttribute = "length";
+                    var image = input.Substring(tokenStart, tokenEnd - tokenStart);
+                    var ptbImage = Token.ApplyPennTreeBankFormat(image, type);
+                    // create new element
+                    var xmlToken = new XElement(XMLToken,
+                        new XAttribute(ImageAttribute, image),
+                        new XAttribute(TokenTypeAttribute, type),
+                        new XAttribute(OffsetAttribute, Convert.ToString(tokenStart)),
+                        new XAttribute(LengthAttribute, Convert.ToString(image.Length))
+                    );
+                    if (ptbImage != null)
+                    {
+                        xmlToken.Add(ptbImage);
+                    }
 
-	  private static readonly ILoggerFactory LoggerFactory = new LoggerFactory();
-	  /// <summary>
-	  /// the logger </summary>
-	  private static readonly ILogger Logger = new Logger<NTok>(LoggerFactory);
+                    // check if token is first token of a paragraph or text unit
+                    if (null != input.GetAnnotation(NTok.BorderAnnotation))
+                    {
+                        // add current text unit to paragraph and create new one
+                        if (tu.HasElements)
+                        {
+                            p.Add(tu);
+                            tuId++;
+                            tu = new XElement(XMLTextUnit,
+                                new XAttribute(IdAttribute, Convert.ToString(tuId)));
+                        }
+                    }
 
-	  /// <summary>
-	  /// Creates an XML document from the given annotated string.
-	  /// </summary>
-	  /// <param name="input">The annotated string.</param>
-	  /// <returns>The XDocument.</returns>
-	  /// <exception cref="ProcessingException">if an error occurs </exception>
-	  public static XDocument CreateXmlDocument(IAnnotatedString input)
-	  {
-		// create result document
-        var doc = new XDocument(new XElement(XMLDocument));
-		// init text unit counter
-		int tuId = 0;
-		// create paragraph element
-		XElement p = new XElement(XMLParagraph);
-		// create text unit element
-        XElement tu = new XElement(XMLTextUnit, new XAttribute(IdAttribute,Convert.ToString(tuId) );
+                    // check if token is first token of a paragraph
+                    if (NTok.PBorder.Equals((string) input.GetAnnotation(NTok.BorderAnnotation)))
+                    {
+                        // add current paragraph to document and create new one
+                        if (p.HasElements)
+                        {
+                            root?.Add(p);
+                            p = new XElement(XMLParagraph);
+                        }
+                    }
 
-		// iterate over tokens and create XML elements
-		char c = input.setIndex(0);
-		while (c != CharacterIterator.DONE)
-		{
+                    // add token to text unit
+                    tu.Add(xmlToken);
+                }
 
-		  int tokenStart = input.GetRunStart(NTok.ClassAnnotation);
-		  int tokenEnd = input.GetRunLimit(NTok.ClassAnnotation);
-		  // check if c belongs to a token
-		  if (null != input.GetAnnotation(NTok.ClassAnnotation))
-		  {
-			// get tag
-			string type = (string)input.GetAnnotation(NTok.ClassAnnotation);
-			if (null == type)
-			{
-			  throw new ProcessingException(string.Format("undefined class {0}", input.GetAnnotation(NTok.ClassAnnotation)));
-			}
-			// create new element
-			Element xmlToken = doc.createElement(XMLToken);
-			// set attributes
-			string image = input.Substring(tokenStart, tokenEnd - tokenStart);
-			xmlToken.setAttribute(ImageAttribute, image);
-			string ptbImage = Token.applyPtbFormat(image, type);
-			if (null != ptbImage)
-			{
-			  xmlToken.setAttribute(PennTreeBankAttribute, ptbImage);
-			}
-			xmlToken.setAttribute(TokenTypeAttribute, type);
-			xmlToken.setAttribute(OffsetAttribute, tokenStart + "");
-			xmlToken.setAttribute(LengthAttribute, image.Length + "");
+                // set iterator to next token
+                c = input.SetIndex(tokenEnd);
+            }
 
-			// check if token is first token of a paragraph or text unit
-			if (null != input.GetAnnotation(NTok.BorderAnnotation))
-			{
-			  // add current text unit to paragraph and create new one
-			  if (tu.hasChildNodes())
-			  {
-				p.appendChild(tu);
-				tu = doc.createElement(XMLTextUnit);
-				tuId++;
-				tu.setAttribute(IdAttribute, tuId + "");
-			  }
-			}
+            // add last text units to paragraph
+            if (tu.HasElements)
+            {
+                p.Add(tu);
+            }
 
-			// check if token is first token of a paragraph
-			if (input.GetAnnotation(NTok.BorderAnnotation) == NTok.PBorder)
-			{
-			  // add current paragraph to document and create new one
-			  if (p.hasChildNodes())
-			  {
-				root.appendChild(p);
-				p = doc.createElement(XMLParagraph);
-			  }
-			}
+            // add last paragraph element to document
+            if (p.HasElements)
+            {
+                root?.Add(p);
+            }
 
-			// add token to text unit
-			tu.appendChild(xmlToken);
-		  }
-		  // set iterator to next token
-		  c = input.setIndex(tokenEnd);
-		}
-		// add last text units to paragraph
-		if (tu.hasChildNodes())
-		{
-		  p.appendChild(tu);
-		}
-		// add last paragraph element to document
-		if (p.hasChildNodes())
-		{
-		  root.appendChild(p);
-		}
+            return doc;
+        }
 
-		// return document
-		return doc;
-	  }
-
-
-	  /// <summary>
-	  /// Creates an XML file from the given annotated string.
-	  /// </summary>
-	  /// <param name="input">
-	  ///          the annotated string </param>
-	  /// <param name="encoding">
-	  ///          the encoding to use </param>
-	  /// <param name="fileName">
-	  ///          the name of the XML file </param>
-	  /// <exception cref="ProcessingException">
-	  ///              if an error occurs </exception>
-	  public static void createXmlFile(IAnnotatedString input, string encoding, string fileName)
-	  {
-
-		// tokenize text
-		Document doc = CreateXmlDocument(input);
-
-		try
-		{
-		  // init writer for result
-		  Writer @out = new StreamWriter(new FileStream(fileName, FileMode.Create, FileAccess.Write), encoding);
-		  // use a transformer for output
-		  Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		  transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		  transformer.setOutputProperty(OutputKeys.ENCODING, encoding);
-		  DOMSource source = new DOMSource(doc);
-		  StreamResult result = new StreamResult(@out);
-		  transformer.transform(source, result);
-		  @out.close();
-		}
-		catch (TransformerException te)
-		{
-		  throw new ProcessingException(te.LocalizedMessage, te);
-		}
-		catch (IOException ioe)
-		{
-		  throw new ProcessingException(ioe.LocalizedMessage, ioe);
-		}
-	  }
+        /// <summary>
+        ///     Creates an XML file from the given annotated string.
+        /// </summary>
+        /// <param name="input">The annotated string.</param>
+        /// <param name="encoding">The encoding to use.</param>
+        /// <param name="fileName">The name of the XML file.</param>
+        public static void CreateXmlFile(IAnnotatedString input, string encoding, string fileName)
+        {
+            // tokenize text
+            var doc = CreateXmlDocument(input);
+            // init writer for result
+            using var writer = new StreamWriter(new FileStream(fileName, FileMode.Create, FileAccess.Write));
+            doc.WriteTo(new XmlTextWriter(writer) {Formatting = Formatting.Indented});
+        }
 
 
-	  /// <summary>
-	  /// Creates an XML string from the given annotated string.
-	  /// </summary>
-	  /// <param name="input">
-	  ///          the annotated string </param>
-	  /// <returns> an XML String </returns>
-	  /// <exception cref="ProcessingException">
-	  ///              if an error occurs </exception>
-	  public static string createXmlString(IAnnotatedString input)
-	  {
-
-		// tokenize text
-		Document doc = CreateXmlDocument(input);
-
-		// init output writer for result
-		StringWriter @out = new StringWriter();
-
-		// use a transformer for output
-		try
-		{
-		  Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		  transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		  DOMSource source = new DOMSource(doc);
-		  StreamResult result = new StreamResult(@out);
-		  transformer.transform(source, result);
-		}
-		catch (TransformerException te)
-		{
-		  throw new ProcessingException(te.LocalizedMessage, te);
-		}
-
-		// return result
-		return @out.ToString();
-	  }
-
-
-	  /// <summary>
-	  /// This main method must be used with two or three arguments:
-	  /// <ul>
-	  /// <li>a file name for the document to tokenize
-	  /// <li>the language of the document
-	  /// <li>an optional encoding to use (default is UTF-8)
-	  /// </ul>
-	  /// </summary>
-	  /// <param name="args">
-	  ///          the arguments </param>
-	  public static void Main(string[] args)
-	  {
-
-		// check for correct arguments
-		if ((args.Length != 2) && (args.Length != 3))
-		{
-		  Console.WriteLine("This method needs two arguments:\n" + "- a file name for the document to tokenize\n" + "- the language of the document\n" + "- an optional encoding to use (default is UTF-8)");
-		  Environment.Exit(1);
-		}
-
-		// check encoding
-		string encoding = "UTF-8";
-		if (args.Length == 3)
-		{
-		  encoding = args[2];
-		}
-
-		string text = null;
-		try
-		{
-		  // get text from file
-		  text = FileTools.readFileAsString(new File(args[0]), encoding);
-		}
-		catch (IOException ioe)
-		{
-		  Console.WriteLine(ioe.ToString());
-		  Console.Write(ioe.StackTrace);
-		  Environment.Exit(1);
-		}
-
-		try
-		{
-		  // create new instance of JTok
-		  NTok testTok = new NTok();
-
-		  // tokenize text
-		  IAnnotatedString result = testTok.Tokenize(text, args[1]);
-
-		  // print result
-		  Console.WriteLine(XmlOutputter.createXmlString(result));
-
-		}
-		catch (IOException e)
-		{
-		  Logger.error(e.LocalizedMessage, e);
-		}
-	  }
-	}
-
+        /// <summary>
+        ///     Creates an XML string from the given annotated string.
+        /// </summary>
+        /// <param name="input">The annotated string.</param>
+        /// <returns>An XML String.</returns>
+        public static string CreateXmlString(IAnnotatedString input)
+        {
+            var doc = CreateXmlDocument(input);
+            using var writer = new StringWriter();
+            doc.WriteTo(new XmlTextWriter(writer) {Formatting = Formatting.Indented});
+            return writer.ToString();
+        }
+    }
 }
