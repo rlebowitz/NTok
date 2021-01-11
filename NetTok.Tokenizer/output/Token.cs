@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using NetTok.Tokenizer.Descriptions;
+using NetTok.Tokenizer.Utilities;
 
 /*
   * NTok
@@ -108,7 +109,7 @@ namespace NetTok.Tokenizer.Output
 
             switch (type)
             {
-                case PunctuationDescription.OpenBracket:
+                case Constants.Punctuation.OpenBracket:
                     result = image switch
                     {
                         "(" => LRB,
@@ -117,7 +118,7 @@ namespace NetTok.Tokenizer.Output
                         _ => null
                     };
                     break;
-                case PunctuationDescription.CloseBracket:
+                case Constants.Punctuation.CloseBracket:
                     result = image switch
                     {
                         ")" => RRB,
@@ -126,10 +127,10 @@ namespace NetTok.Tokenizer.Output
                         _ => null
                     };
                     break;
-                case PunctuationDescription.OpenPunct:
+                case Constants.Punctuation.OpenPunct:
                     result = "``";
                     break;
-                case PunctuationDescription.ClosePunct:
+                case Constants.Punctuation.ClosePunct:
                     result = "''";
                     break;
                 default:
