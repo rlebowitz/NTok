@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NetTok.Tokenizer.Descriptions;
 using NetTok.Tokenizer.Exceptions;
+using NetTok.Tokenizer.Utilities;
 
 /*
  * NTok
@@ -78,7 +79,8 @@ namespace NetTok.Tokenizer
                 MapClasses(ClassesRoot.Elements().ToList());
                 // load macros
                 var macrosMap = new Dictionary<string, string>();
-                Description.LoadMacros(Language, MacrosConfiguration, macrosMap);
+                MacroDescription = new MacroDescription();
+                MacroDescription.LoadMacros(Language, MacrosConfiguration, macrosMap);
 
                 // load punctuation description
                 PunctuationDescription = new PunctuationDescription(language, macrosMap);
@@ -109,6 +111,7 @@ namespace NetTok.Tokenizer
         public string Language { get; }
         public XElement ClassesRoot { get; set; }
         public IDictionary<string, List<string>> AncestorsMap { get; set; }
+        public MacroDescription MacroDescription { get; set; }
         public PunctuationDescription PunctuationDescription { get; set; }
         public CliticsDescription CliticsDescription { get; set; }
         public AbbreviationDescription AbbreviationDescription { get; set; }
@@ -117,13 +120,13 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     The Regular Expression matcher for all punctuation from the punctuation description.
         /// </summary>
-        public Regex AllPunctuationMatcher => PunctuationDescription.RulesMap[PunctuationDescription.AllRule];
+        public Regex AllPunctuationMatcher => PunctuationDescription.RulesMap[Constants.Punctuation.AllRule];
 
         /// <summary>The matcher for internal punctuation from the punctuation description.</summary>
-        public Regex InternalMatcher => PunctuationDescription.RulesMap[PunctuationDescription.InternalRule];
+        public Regex InternalMatcher => PunctuationDescription.RulesMap[Constants.Punctuation.InternalRule];
 
         /// <summary>The matcher for sentence internal punctuation from the punctuation description.</summary>
-        public Regex InternalTuMatcher => PunctuationDescription.RulesMap[PunctuationDescription.InternalTuRule];
+        public Regex InternalTuMatcher => PunctuationDescription.RulesMap[Constants.Punctuation.InternalTuRule];
 
         /// <summary>The matcher for pro-clitics from the clitics description.</summary>
         public Regex ProcliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.ProcliticRule];

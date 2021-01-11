@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NetTok.Tokenizer.Exceptions;
+using NetTok.Tokenizer.Utilities;
 
 /*
  NTok
@@ -55,46 +56,6 @@ namespace NetTok.Tokenizer.Descriptions
         public Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
 
         protected static char[] Delimiters { get; } = new[] {':', '\t'};
-
-        /// <summary>
-        ///     Reads the embedded macro configuration file for the specified language and adds its data to the specified map.
-        /// </summary>
-        /// <param name="language">The specified language.</param>
-        /// <param name="fileName">The specified embedded resource file.</param>
-        /// <param name="macroMap">A map of macro names to regular expression pattern strings.</param>
-        /// <returns>The populated class map.</returns>
-        /// <exception cref="IOException">
-        ///     if there is an error when reading the configuration
-        /// </exception>
-        public static IDictionary<string, string> LoadMacros(string language, string fileName,
-            Dictionary<string, string> macroMap)
-        {
-            Guard.NotNull(fileName);
-            Guard.NotNull(macroMap);
-            using var reader = new StreamReader(ResourceManager.Read(language, fileName));
-            string line;
-            while ((line = reader.ReadLine()?.Trim()) != null)
-            {
-                if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                var sections = line.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
-                if (sections.Length != 2)
-                {
-                    throw new InitializationException($"File: {fileName} Line: {line} is not properly formatted as a Macros line.");
-                }
-
-                var macroName = sections[0].Trim();
-                var regularExpressionString = sections[1].Trim();
-                // expand possible macros
-                regularExpressionString = ReplaceReferences(regularExpressionString, macroMap);
-                macroMap[macroName] = regularExpressionString;
-            }
-
-            return macroMap;
-        }
 
         /// <summary>
         ///     Reads from the given reader to the start of the LISTS: section or if the reader returns null.
@@ -236,7 +197,7 @@ namespace NetTok.Tokenizer.Descriptions
         /// <param name="definitionsMap">The specified map of definition names to regular expression pattern strings</param>
         /// <param name="macrosMap">The specified map of macro names to regular expression pattern strings.</param>
         /// <exception cref="IOException">Thrown if there an error occurs while reading the embedded configuration file.</exception>
-        public virtual void LoadRules(StreamReader reader, IDictionary<string, string> definitionsMap,
+        public void LoadRules(StreamReader reader, IDictionary<string, string> definitionsMap,
             IDictionary<string, string> macrosMap)
         {
             Guard.NotNull(reader);
@@ -280,7 +241,7 @@ namespace NetTok.Tokenizer.Descriptions
         /// <param name="reader">The specified StreamReader.</param>
         /// <exception cref="IOException">Thrown if an error occurs while reading the embedded configuration file.</exception>
         /// <exception cref="InitializationException">Thrown if the configuration fails.</exception>
-        public void LoadLists(StreamReader reader)
+        public void LoadAbbreviationsLists(StreamReader reader)
         {
             Guard.NotNull(reader);
             string line;
@@ -304,7 +265,7 @@ namespace NetTok.Tokenizer.Descriptions
 
                 var abbreviationsListFileName = sections[0].Trim();
                 var className = sections[1].Trim();
-                LoadList(abbreviationsListFileName, className);
+                LoadAbbreviationList(abbreviationsListFileName, className);
             }
         }
 
@@ -314,7 +275,7 @@ namespace NetTok.Tokenizer.Descriptions
         /// <param name="abbreviationsListFileName">The specified embedded abbreviations list file name.</param>
         /// <param name="className">The specified class name.</param>
         /// <exception cref="IOException">Thrown if an error occurs when reading the list file.</exception>
-        private void LoadList(string abbreviationsListFileName, string className)
+        private void LoadAbbreviationList(string abbreviationsListFileName, string className)
         {
             Guard.NotNull(abbreviationsListFileName);
             Guard.NotNull(className);
@@ -330,7 +291,7 @@ namespace NetTok.Tokenizer.Descriptions
                     continue; // skip blank and comment lines.
                 }
 
-                var sections = line.Split(new char[]{'#', '\t'}, StringSplitOptions.RemoveEmptyEntries);
+                var sections = line.Split(new[]{'#', '\t'}, StringSplitOptions.RemoveEmptyEntries);
                 if (sections.Length == 0)
                 {
                     continue;
@@ -355,7 +316,7 @@ namespace NetTok.Tokenizer.Descriptions
         /// </param>
         /// <param name="referenceMap">A map of reference name to regular expression pattern strings.</param>
         /// <returns>The modified regular expression string.</returns>
-        private static string ReplaceReferences(string regexPattern, IDictionary<string, string> referenceMap)
+        protected string ReplaceReferences(string regexPattern, IDictionary<string, string> referenceMap)
         {
             var result = regexPattern;
             var matches = ReferencesRegex.Matches(regexPattern); // searches for strings enclosed by angle brackets <>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using NetTok.Tokenizer.Exceptions;
+using NetTok.Tokenizer.Utilities;
 
 /*
 * NTok

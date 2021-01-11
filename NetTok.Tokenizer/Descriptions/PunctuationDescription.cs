@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-
+using NetTok.Tokenizer.Utilities;
 /*
  * NTok
  * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
@@ -35,60 +35,7 @@ namespace NetTok.Tokenizer.Descriptions
     /// </summary>
     public class PunctuationDescription : Description
     {
-        /// <summary>
-        ///     class name for opening punctuation
-        /// </summary>
-        public const string OpenPunct = "OPEN_PUNCT";
-
-        /// <summary>
-        ///     class name for closing punctuation
-        /// </summary>
-        public const string ClosePunct = "CLOSE_PUNCT";
-
-        /// <summary>
-        ///     class name for opening brackets
-        /// </summary>
-        public const string OpenBracket = "OPEN_BRACKET";
-
-        /// <summary>
-        ///     class name for closing brackets
-        /// </summary>
-        public const string CloseBracket = "CLOSE_BRACKET";
-
-        /// <summary>
-        ///     class name for terminal punctuation
-        /// </summary>
-        public const string TermPunct = "TERM_PUNCT";
-
-        /// <summary>
-        ///     class name for possible terminal punctuation
-        /// </summary>
-        public const string TermPunctP = "TERM_PUNCT_P";
-
-        /// <summary>
-        ///     name of the all punctuation rule
-        /// </summary>
-        protected internal const string AllRule = "ALL_PUNCT_RULE";
-
-        /// <summary>
-        ///     name of the internal punctuation rule
-        /// </summary>
-        protected internal const string InternalRule = "INTERNAL_PUNCT_RULE";
-
-        /// <summary>
-        ///     name of the sentence internal punctuation rule
-        /// </summary>
-        protected internal const string InternalTuRule = "INTERNAL_TU_PUNCT_RULE";
-
-        /// <summary>
-        ///     class name for ambiguous open/close punctuation
-        /// </summary>
-        protected internal const string OpenClosePunct = "OPENCLOSE_PUNCT";
-
-        /// <summary>
-        ///     name suffix of the resource file with the punctuation description.
-        /// </summary>
-        private const string PunctuationDescriptionSuffix = "punct.cfg";
+       
 
 
         /// <summary>
@@ -103,16 +50,16 @@ namespace NetTok.Tokenizer.Descriptions
             RulesMap = new Dictionary<string, Regex>();
             RegExpMap = new Dictionary<Regex, string>();
 
-            using var stream = ResourceManager.Read(language, PunctuationDescriptionSuffix);
+            using var stream = ResourceManager.Read(language, Constants.Punctuation.PunctuationDescriptionSuffix);
             using var reader = new StreamReader(stream);
             // read config file to definitions start
             ReadToDefinitions(reader);
             // read definitions
             IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
-            base.LoadDefinitions(reader, macrosMap, definitionsMap);
+            LoadDefinitions(reader, macrosMap, definitionsMap);
             // when loadDefinitions returns the reader has reached the rules section;
-            base.LoadRules(reader, definitionsMap, macrosMap);
-            RulesMap[AllRule] = CreateAllRule(definitionsMap);
+            LoadRules(reader, definitionsMap, macrosMap);
+            RulesMap[Constants.Punctuation.AllRule] = CreateAllRule(definitionsMap);
         }
     }
 }

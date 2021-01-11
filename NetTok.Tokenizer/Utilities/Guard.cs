@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NetTok.Tokenizer
+namespace NetTok.Tokenizer.Utilities
 {
     public static class Guard
     {

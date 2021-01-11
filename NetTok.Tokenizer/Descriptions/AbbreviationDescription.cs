@@ -74,7 +74,7 @@ namespace NetTok.Tokenizer.Descriptions
                 // read config file to lists start
                 ReadToLists(reader);
                 // read lists
-                LoadLists(reader);
+                LoadAbbreviationsLists(reader);
                 // read definitions
                 IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
                 base.LoadDefinitions(reader, macrosMap, definitionsMap);

@@ -30,7 +30,7 @@ using Microsoft.Extensions.Logging;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer
+namespace NetTok.Tokenizer.Tools
 {
     /// <summary>
     ///     Provides methods to collect abbreviations from corpora containing a single sentence per line.

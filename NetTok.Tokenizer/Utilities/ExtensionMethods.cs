@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace NetTok.Tokenizer
+namespace NetTok.Tokenizer.Utilities
 {
     public static class ExtensionMethods
     {

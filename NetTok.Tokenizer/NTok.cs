@@ -7,6 +7,7 @@ using NetTok.Tokenizer.Annotate;
 using NetTok.Tokenizer.Descriptions;
 using NetTok.Tokenizer.Exceptions;
 using NetTok.Tokenizer.Output;
+using NetTok.Tokenizer.Utilities;
 
 /*
  * NTok
