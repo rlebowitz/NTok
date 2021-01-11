@@ -43,6 +43,11 @@ namespace NetTok.Tokenizer.Descriptions
         // regular expression for matching references used in regular expressions of config files
         private static readonly Regex ReferencesRegex = new Regex("\\<[A-Za-z0-9_]+\\>");
 
+        protected Description(string language)
+        {
+            Language = language ?? "default";
+        }
+
         /// <returns> the definitions map </returns>
         public Dictionary<string, Regex> DefinitionsMap { get; set; }
 
@@ -55,7 +60,16 @@ namespace NetTok.Tokenizer.Descriptions
         /// <returns> the class members map </returns>
         public Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
 
-        protected static char[] Delimiters { get; } = new[] {':', '\t'};
+        protected static char[] Delimiters { get; } = {':', '\t'};
+
+        protected string Language { get; }
+
+        /// <summary>
+        ///     Loads various embedded resource configuration files and adds additional data to the macros map.
+        /// </summary>
+        /// <param name="macrosMap">A map of macro names to regular expression strings.</param>
+        /// <exception cref="IOException">If there is an error when reading the configuration.</exception>
+        public abstract void Load(IDictionary<string, string> macrosMap);
 
         /// <summary>
         ///     Reads from the given reader to the start of the LISTS: section or if the reader returns null.
@@ -138,7 +152,7 @@ namespace NetTok.Tokenizer.Descriptions
                 }
 
                 var sections = line.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
-                
+
                 if (!line.StartsWith("COLON") && sections.Length != 3)
                 {
                     throw new InitializationException($"Line: {line} is not properly formatted as a Definitions line.");
@@ -147,7 +161,7 @@ namespace NetTok.Tokenizer.Descriptions
                 if (line.StartsWith("COLON"))
                 {
                     // special case
-                    sections = new [] {"COLON", ":", "COLON"};
+                    sections = new[] {"COLON", ":", "COLON"};
                 }
 
                 var definitionName = sections[0].Trim();
@@ -291,7 +305,7 @@ namespace NetTok.Tokenizer.Descriptions
                     continue; // skip blank and comment lines.
                 }
 
-                var sections = line.Split(new[]{'#', '\t'}, StringSplitOptions.RemoveEmptyEntries);
+                var sections = line.Split(new[] {'#', '\t'}, StringSplitOptions.RemoveEmptyEntries);
                 if (sections.Length == 0)
                 {
                     continue;

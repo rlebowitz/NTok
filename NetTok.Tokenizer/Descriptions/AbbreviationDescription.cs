@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using NetTok.Tokenizer.Utilities;
 
 /*
  * NTok
@@ -37,57 +38,10 @@ namespace NetTok.Tokenizer.Descriptions
     public class AbbreviationDescription : Description
     {
         /// <summary>
-        ///     Class name for breaking abbreviation
-        /// </summary>
-        public const string BAbbreviation = "B_ABBREVIATION";
-
-        /// <summary>
-        ///     name of the all abbreviation rule
-        /// </summary>
-        protected internal const string AllRule = "ALL_RULE";
-
-        /// <summary>
-        ///     name suffix of the resource file with the abbreviations description
-        /// </summary>
-        private const string AbbreviationDescriptionSuffix = "abbrev.cfg";
-
-
-        // the most common terms that only start with a capital letter when they are at the beginning
-        // of a sentence
-
-
-        /// <summary>
         ///     Creates a new instance of <seealso cref="AbbreviationDescription" /> for the given language.
         /// </summary>
         /// <param name="language">The specified language.</param>
-        /// <param name="macrosMap">A map of macro names to regular expression strings.</param>
-        /// <exception cref="IOException">If there is an error when reading the configuration.</exception>
-        public AbbreviationDescription(string language, IDictionary<string, string> macrosMap)
-        {
-            DefinitionsMap = new Dictionary<string, Regex>();
-            RulesMap = new Dictionary<string, Regex>();
-            RegExpMap = new Dictionary<Regex, string>();
-            base.ClassMembersMap = new Dictionary<string, HashSet<string>>();
-
-            using (var reader = new StreamReader(ResourceManager.Read(language, AbbreviationDescriptionSuffix)))
-            {
-                // read config file to lists start
-                ReadToLists(reader);
-                // read lists
-                LoadAbbreviationsLists(reader);
-                // read definitions
-                IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
-                base.LoadDefinitions(reader, macrosMap, definitionsMap);
-                RulesMap[AllRule] = CreateAllRule(definitionsMap);
-            }
-
-            // load list of terms that only start with a capital letter when they are
-            // at the beginning of a sentence
-            using (var reader = new StreamReader(ResourceManager.Read($"{language}_nonCapTerms.txt")))
-            {
-                ReadNonCapTerms(reader);
-            }
-        }
+        public AbbreviationDescription(string language) : base(language) { }
 
         /// <summary>
         ///     Returns the set of the most common terms that only start with a capital letter when they are at
@@ -95,6 +49,35 @@ namespace NetTok.Tokenizer.Descriptions
         /// </summary>
         /// <returns> a set with the terms </returns>
         public virtual HashSet<string> NonCapTerms { get; private set; }
+
+        public override void Load(IDictionary<string, string> macrosMap)
+        {
+            DefinitionsMap = new Dictionary<string, Regex>();
+            RulesMap = new Dictionary<string, Regex>();
+            RegExpMap = new Dictionary<Regex, string>();
+            ClassMembersMap = new Dictionary<string, HashSet<string>>();
+
+            using (var reader =
+                new StreamReader(ResourceManager.Read($"{Language}_{Constants.Abbreviations.DescriptionSuffix}")))
+            {
+                // read config file to lists start
+                ReadToLists(reader);
+                // read lists
+                LoadAbbreviationsLists(reader);
+                // read definitions
+                IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
+                LoadDefinitions(reader, macrosMap, definitionsMap);
+                RulesMap[Constants.Abbreviations.AllRule] = CreateAllRule(definitionsMap);
+            }
+
+            // load list of terms that only start with a capital letter when they are
+            // at the beginning of a sentence
+            using (var reader =
+                new StreamReader(ResourceManager.Read($"{Language}_{Constants.Abbreviations.NonCapTermsSuffix}")))
+            {
+                ReadNonCapTerms(reader);
+            }
+        }
 
         /// <summary>
         ///     Reads the list of terms that only start with a capital letter when they are at the beginning of

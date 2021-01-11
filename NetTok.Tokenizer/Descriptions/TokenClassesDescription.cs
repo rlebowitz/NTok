@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using NetTok.Tokenizer.Utilities;
 
 /*
  * NTok
@@ -36,35 +37,25 @@ namespace NetTok.Tokenizer.Descriptions
     public class TokenClassesDescription : Description
     {
         /// <summary>
-        ///     name of the all classes rule
-        /// </summary>
-        protected internal const string AllRule = "ALL_CLASSES_RULE";
-
-
-        // name suffix of the resource file with the token classes description
-        private const string ClassDescription = "classes.cfg";
-
-
-        /// <summary>
         ///     Creates a new instance of <seealso cref="TokenClassesDescription" /> for the given language.
         /// </summary>
         /// <param name="language">The specified language.</param>
-        /// <param name="macrosMap">A map of macro names to regular expression strings.</param>
-        /// <exception cref="IOException">If there is an error when reading the configuration.</exception>
-        public TokenClassesDescription(string language, IDictionary<string, string> macrosMap)
+        public TokenClassesDescription(string language) : base(language) { }
+
+        public override void Load(IDictionary<string, string> macrosMap)
         {
             DefinitionsMap = new Dictionary<string, Regex>();
             RulesMap = new Dictionary<string, Regex>();
             RegExpMap = new Dictionary<Regex, string>();
 
-            using var stream = ResourceManager.Read(language, ClassDescription);
-            using var reader = new StreamReader(stream);
+            using var reader =
+                new StreamReader(ResourceManager.Read($"{Language}_{Constants.TokenClasses.ClassDescriptionSuffix}"));
             // read config file to definitions start
             ReadToDefinitions(reader);
             // read definitions
             IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
-            base.LoadDefinitions(reader, macrosMap, definitionsMap);
-            RulesMap[AllRule] = CreateAllRule(definitionsMap);
+            LoadDefinitions(reader, macrosMap, definitionsMap);
+            RulesMap[Constants.TokenClasses.AllRule] = CreateAllRule(definitionsMap);
         }
     }
 }

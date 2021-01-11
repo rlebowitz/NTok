@@ -9,20 +9,14 @@ namespace NetTok.Tokenizer.Descriptions
     public class MacroDescription : Description
     {
         /// <summary>
-        ///     Reads the embedded macro configuration file for the specified language and adds its data to the specified map.
+        ///     Class used to load macro definitions from language-specific configuration files.
         /// </summary>
-        /// <param name="language">The specified language.</param>
-        /// <param name="fileName">The specified embedded resource file.</param>
-        /// <param name="macroMap">A map of macro names to regular expression pattern strings.</param>
-        /// <returns>The populated class map.</returns>
-        /// <exception cref="IOException">
-        ///     if there is an error when reading the configuration
-        /// </exception>
-        public IDictionary<string, string> LoadMacros(string language, string fileName, Dictionary<string, string> macroMap)
+        /// <param name="language">The specified language to use.</param>
+        public MacroDescription(string language) : base(language) { }
+
+        public override void Load(IDictionary<string, string> macroMap)
         {
-            Guard.NotNull(fileName);
-            Guard.NotNull(macroMap);
-            using var reader = new StreamReader(ResourceManager.Read(language, fileName));
+            using var reader = new StreamReader(ResourceManager.Read($"{Language}_{Constants.Resources.MacrosSuffix}"));
             string line;
             while ((line = reader.ReadLine()?.Trim()) != null)
             {
@@ -31,10 +25,11 @@ namespace NetTok.Tokenizer.Descriptions
                     continue;
                 }
 
-                var sections = line.Split(Description.Delimiters, StringSplitOptions.RemoveEmptyEntries);
+                var sections = line.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
                 if (sections.Length != 2)
                 {
-                    throw new InitializationException($"File: {fileName} Line: {line} is not properly formatted as a Macros line.");
+                    throw new InitializationException(
+                        $"File: {Language}_{Constants.Resources.MacrosSuffix} Line: {line} is not properly formatted as a Macros line.");
                 }
 
                 var macroName = sections[0].Trim();
@@ -43,8 +38,6 @@ namespace NetTok.Tokenizer.Descriptions
                 regularExpressionString = ReplaceReferences(regularExpressionString, macroMap);
                 macroMap[macroName] = regularExpressionString;
             }
-
-            return macroMap;
         }
     }
 }

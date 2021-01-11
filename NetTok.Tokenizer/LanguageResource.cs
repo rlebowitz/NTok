@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NetTok.Tokenizer.Descriptions;
@@ -41,21 +42,18 @@ namespace NetTok.Tokenizer
     /// </summary>
     public class LanguageResource
     {
-        // name suffix of the resource file with the classes hierarchy
-        private const string ClassesHierarchy = "class_hierarchy.xml";
-
-        // name suffix of the config file with the macros
-        private const string MacrosConfiguration = "macros.cfg";
-
         /// <summary>
-        ///     Creates a new instance of <seealso cref="LanguageResource" /> for the given language using the resource
+        ///     Creates a new instance of LanguageResource for the specified language using the resource
         ///     description files in the given resource directory.
         /// </summary>
         /// <param name="language">
-        ///     the name of the language for which this class contains the resources
+        ///     The specified name of the language for which to load resources.
         /// </param>
+        /// <remarks>
+        /// If the specified language is null or non-existent, the language used will be specified as 'default'.
+        /// </remarks>
         /// <exception cref="InitializationException">
-        ///     if an error occurs
+        ///     Thrown if an error occurs while loading any of the various embedded resource files.
         /// </exception>
         public LanguageResource(string language)
         {
@@ -70,8 +68,8 @@ namespace NetTok.Tokenizer
             try
             {
                 // load classes hierarchy
-                using var stream = ResourceManager.Read(language, ClassesHierarchy);
-                var document = XDocument.Parse(new StreamReader(stream).ReadToEnd());
+                using var reader = new StreamReader(ResourceManager.Read($"{Language}_{Constants.Resources.ClassesHierarchy}"));
+                var document = XDocument.Parse(reader.ReadToEnd());
                 // set hierarchy root
                 ClassesRoot = document.Root;
                 // map class names to dom elements
@@ -79,20 +77,24 @@ namespace NetTok.Tokenizer
                 MapClasses(ClassesRoot.Elements().ToList());
                 // load macros
                 var macrosMap = new Dictionary<string, string>();
-                MacroDescription = new MacroDescription();
-                MacroDescription.LoadMacros(Language, MacrosConfiguration, macrosMap);
+                MacroDescription = new MacroDescription(Language);
+                MacroDescription.Load(macrosMap);
 
                 // load punctuation description
-                PunctuationDescription = new PunctuationDescription(language, macrosMap);
+                PunctuationDescription = new PunctuationDescription(Language);
+                PunctuationDescription.Load(macrosMap);
 
                 // load clitics description
-                CliticsDescription = new CliticsDescription(language, macrosMap);
+                CliticsDescription = new CliticsDescription(Language);
+                CliticsDescription.Load(macrosMap);
 
                 // load abbreviation description
-                AbbreviationDescription = new AbbreviationDescription(language, macrosMap);
+                AbbreviationDescription = new AbbreviationDescription(Language);
+                AbbreviationDescription.Load(macrosMap);
 
                 // load token classes description document
-                ClassesDescription = new TokenClassesDescription(language, macrosMap);
+                ClassesDescription = new TokenClassesDescription(Language);
+                ClassesDescription.Load(macrosMap);
             }
             catch (IOException ioe)
             {
@@ -129,16 +131,16 @@ namespace NetTok.Tokenizer
         public Regex InternalTuMatcher => PunctuationDescription.RulesMap[Constants.Punctuation.InternalTuRule];
 
         /// <summary>The matcher for pro-clitics from the clitics description.</summary>
-        public Regex ProcliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.ProcliticRule];
+        public Regex ProcliticsMatcher => CliticsDescription.RulesMap[Constants.Clitics.ProcliticRule];
 
         /// <summary>The matcher for enclitics from the clitics description.</summary>
-        public Regex EncliticsMatcher => CliticsDescription.RulesMap[CliticsDescription.EncliticRule];
+        public Regex EncliticsMatcher => CliticsDescription.RulesMap[Constants.Clitics.EncliticRule];
 
         /// <summary>The map with the abbreviation lists.</summary>
         public IDictionary<string, HashSet<string>> AbbreviationLists => AbbreviationDescription.ClassMembersMap;
 
         /// <summary>The matcher for the all abbreviations from the abbreviations description.</summary>
-        public Regex AllAbbreviationMatcher => AbbreviationDescription.RulesMap[AbbreviationDescription.AllRule];
+        public Regex AllAbbreviationMatcher => AbbreviationDescription.RulesMap[Constants.Abbreviations.AllRule];
 
         /// <summary>
         ///     The set of the most common terms that only start with a capital letter when they are at the beginning of a sentence
@@ -147,7 +149,7 @@ namespace NetTok.Tokenizer
 
 
         /// <summary> the matcher for all token classes from the token classes description </summary>
-        public Regex AllClassesMatcher => ClassesDescription.RulesMap[TokenClassesDescription.AllRule];
+        public Regex AllClassesMatcher => ClassesDescription.RulesMap[Constants.TokenClasses.AllRule];
 
         /// <summary>
         ///     Iterates recursively over a list of class elements and adds each element's ancestors to

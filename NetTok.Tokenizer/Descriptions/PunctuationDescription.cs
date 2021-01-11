@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using NetTok.Tokenizer.Utilities;
+
 /*
  * NTok
  * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
@@ -35,23 +36,21 @@ namespace NetTok.Tokenizer.Descriptions
     /// </summary>
     public class PunctuationDescription : Description
     {
-       
-
-
         /// <summary>
         ///     Creates a new instance of <seealso cref="PunctuationDescription" /> for the given language.
         /// </summary>
         /// <param name="language">The specified language.</param>
-        /// <param name="macrosMap">A map of macro names to regular expression strings.</param>
-        /// <exception cref="IOException">If there is an error when reading the configuration </exception>
-        public PunctuationDescription(string language, IDictionary<string, string> macrosMap)
+        public PunctuationDescription(string language) : base(language) { }
+
+        public override void Load(IDictionary<string, string> macrosMap)
         {
             DefinitionsMap = new Dictionary<string, Regex>();
             RulesMap = new Dictionary<string, Regex>();
             RegExpMap = new Dictionary<Regex, string>();
 
-            using var stream = ResourceManager.Read(language, Constants.Punctuation.PunctuationDescriptionSuffix);
-            using var reader = new StreamReader(stream);
+            using var reader =
+                new StreamReader(
+                    ResourceManager.Read($"{Language}_{Constants.Punctuation.PunctuationDescriptionSuffix}"));
             // read config file to definitions start
             ReadToDefinitions(reader);
             // read definitions

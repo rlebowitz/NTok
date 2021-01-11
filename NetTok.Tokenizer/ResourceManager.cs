@@ -10,11 +10,14 @@ namespace NetTok.Tokenizer
         /// <summary>
         ///     Retrieves an embedded resource file.
         /// </summary>
-        /// <param name="fileName">The file name (and extension) of the resource being retrieved.</param>
-        /// <remarks>
-        ///     Format: "{Namespace}.{Folder}.{filename}.{Extension}"
-        /// </remarks>
-        /// <returns>The text contents of the specified file, or an empty string if there are no contents.</returns>
+        /// <param name="fileName">The file name of the resource being retrieved.</param>
+        /// <returns>The contents of the specified resource file as a Stream.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if the resource file name was not supplied or null.
+        /// </exception>
+        /// <exception cref="FileNotFoundException">
+        /// Thrown if the specified resource file does not exist.
+        /// </exception>
         public static Stream Read(string fileName)
         {
             Guard.NotNull(fileName);

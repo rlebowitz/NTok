@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using NetTok.Tokenizer.Utilities;
 
 /*
  * NTok
@@ -36,47 +37,28 @@ namespace NetTok.Tokenizer.Descriptions
     public class CliticsDescription : Description
     {
         /// <summary>
-        ///     Name of the proclitic rule.
-        /// </summary>
-        protected internal const string ProcliticRule = "PROCLITIC_RULE";
-
-        /// <summary>
-        ///     name of the enclitic rule
-        /// </summary>
-        protected internal const string EncliticRule = "ENCLITIC_RULE";
-
-        // name suffix of the resource file with the clitic description
-        private const string CliticDescriptionSuffix = "clitics.cfg";
-
-
-        /// <summary>
         ///     Creates a new instance of <seealso cref="CliticsDescription" /> for the given language.
         /// </summary>
         /// <param name="language">
         ///     the language
         /// </param>
-        /// <param name="macrosMap">
-        ///     a map of macro names to regular expression strings
-        /// </param>
-        /// <exception cref="IOException">
-        ///     if there is an error when reading the configuration
-        /// </exception>
-        public CliticsDescription(string language, IDictionary<string, string> macrosMap)
+        public CliticsDescription(string language) : base(language) { }
+
+        public override void Load(IDictionary<string, string> macrosMap)
         {
             DefinitionsMap = new Dictionary<string, Regex>();
             RulesMap = new Dictionary<string, Regex>();
             RegExpMap = new Dictionary<Regex, string>();
 
-            using var stream = ResourceManager.Read(language, CliticDescriptionSuffix);
-            using var reader = new StreamReader(stream);
-
+            using var reader =
+                new StreamReader(ResourceManager.Read($"{Language}_{Constants.Clitics.DescriptionSuffix}"));
             // read config file to definitions start
             ReadToDefinitions(reader);
             // read definitions
             IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
-            base.LoadDefinitions(reader, macrosMap, definitionsMap);
+            LoadDefinitions(reader, macrosMap, definitionsMap);
             // when loadDefinitions returns the reader has reached the rules section; read rules
-            base.LoadRules(reader, definitionsMap, macrosMap);
+            LoadRules(reader, definitionsMap, macrosMap);
         }
     }
 }

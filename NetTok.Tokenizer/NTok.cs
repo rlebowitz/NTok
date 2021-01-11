@@ -574,7 +574,8 @@ namespace NetTok.Tokenizer
         /// <param name="resource">
         ///     the language resource to use
         /// </param>
-        private static void Annotate(IAnnotatedString input, string key, object value, int beginIndex, int endIndex, string content, LanguageResource resource)
+        private static void Annotate(IAnnotatedString input, string key, object value, int beginIndex, int endIndex,
+            string content, LanguageResource resource)
         {
             // get matcher needed for token classes recognition
             var allClassesMatcher = resource.AllClassesMatcher;
@@ -617,19 +618,19 @@ namespace NetTok.Tokenizer
             var oneClass = IdentifyClass(punctuation.Value, regex, resource.PunctuationDescription);
             // check if we have an ambiguous open/close punctuation; if
             // yes, resolve it
-            if (resource.IsAncestor(PunctuationDescription.OpenClosePunct, oneClass))
+            if (resource.IsAncestor(Constants.Punctuation.OpenClosePunct, oneClass))
             {
                 var nextIndex = punctuation.EndIndex();
                 if (nextIndex >= content.Length || !char.IsLetter(content[nextIndex]))
                 {
-                    oneClass = PunctuationDescription.ClosePunct;
+                    oneClass = Constants.Punctuation.ClosePunct;
                 }
                 else
                 {
                     var prevIndex = punctuation.Index - 1;
                     if (prevIndex < 0 || !char.IsLetter(content[prevIndex]))
                     {
-                        oneClass = PunctuationDescription.OpenPunct;
+                        oneClass = Constants.Punctuation.OpenPunct;
                     }
                 }
             }
@@ -766,13 +767,13 @@ namespace NetTok.Tokenizer
                     {
                         // if we find terminal punctuation or closing brackets,
                         // continue with the current sentence
-                        if (resource.IsAncestor(PunctuationDescription.TermPunct,
+                        if (resource.IsAncestor(Constants.Punctuation.TermPunct,
                                 (string) input.GetAnnotation(ClassAnnotation)) ||
-                            resource.IsAncestor(PunctuationDescription.TermPunctP,
+                            resource.IsAncestor(Constants.Punctuation.TermPunctP,
                                 (string) input.GetAnnotation(ClassAnnotation)) ||
-                            resource.IsAncestor(PunctuationDescription.ClosePunct,
+                            resource.IsAncestor(Constants.Punctuation.ClosePunct,
                                 (string) input.GetAnnotation(ClassAnnotation)) || resource.IsAncestor(
-                                PunctuationDescription.CloseBracket, (string) input.GetAnnotation(ClassAnnotation)))
+                                Constants.Punctuation.CloseBracket, (string) input.GetAnnotation(ClassAnnotation)))
                         {
                             // do nothing
                         }
@@ -794,7 +795,7 @@ namespace NetTok.Tokenizer
                     {
                         var image = input.Substring(tokenStart, tokenEnd - tokenStart);
                         if (resource.NonCapitalizedTerms.Contains(image) ||
-                            resource.IsAncestor(PunctuationDescription.OpenPunct,
+                            resource.IsAncestor(Constants.Punctuation.OpenPunct,
                                 (string) input.GetAnnotation(ClassAnnotation)))
                         {
                             // there is a term that only starts with a capital letter at the
@@ -813,14 +814,14 @@ namespace NetTok.Tokenizer
                     else
                     {
                         // check if token is a end-of-sentence marker
-                        if (resource.IsAncestor(PunctuationDescription.TermPunct,
+                        if (resource.IsAncestor(Constants.Punctuation.TermPunct,
                                 (string) input.GetAnnotation(ClassAnnotation)) ||
-                            resource.IsAncestor(PunctuationDescription.TermPunctP,
+                            resource.IsAncestor(Constants.Punctuation.TermPunctP,
                                 (string) input.GetAnnotation(ClassAnnotation)))
                         {
                             eosMode = true;
                         }
-                        else if (resource.IsAncestor(AbbreviationDescription.BAbbreviation,
+                        else if (resource.IsAncestor(Constants.Abbreviations.BAbbreviation,
                             (string) input.GetAnnotation(ClassAnnotation)))
                         {
                             // check if token is a breaking abbreviation

@@ -97,5 +97,73 @@
             /// </summary>
             public const string PunctuationDescriptionSuffix = "punct.cfg";
         }
+
+        public static class Resources
+        {
+            /// <summary>
+            ///     The suffix of the resource file containing the classes hierarchy information.
+            /// </summary>
+            public const string ClassesHierarchy = "class_hierarchy.xml";
+
+            /// <summary>
+            ///     The suffix of the macros configuration file
+            /// </summary>
+            // 
+            public const string MacrosSuffix = "macros.cfg";
+        }
+
+        public static class Clitics
+        {
+            /// <summary>
+            ///     Name of the proclitic rule.
+            /// </summary>
+            public const string ProcliticRule = "PROCLITIC_RULE";
+
+            /// <summary>
+            ///     Name of the enclitic rule
+            /// </summary>
+            public const string EncliticRule = "ENCLITIC_RULE";
+
+            /// <summary>
+            ///     Suffix of the resource file with the clitic description.
+            /// </summary>
+            public const string DescriptionSuffix = "clitics.cfg";
+        }
+
+        public static class Abbreviations
+        {
+            /// <summary>
+            ///     Class name for breaking abbreviation.
+            /// </summary>
+            public const string BAbbreviation = "B_ABBREVIATION";
+
+            /// <summary>
+            ///     Name of the all abbreviation rule.
+            /// </summary>
+            public const string AllRule = "ALL_RULE";
+
+            /// <summary>
+            ///     Suffix of the resource file with the abbreviations description.
+            /// </summary>
+            public const string DescriptionSuffix = "abbrev.cfg";
+
+            /// <summary>
+            ///     Suffix of the resource file with the non capitalized terms.
+            /// </summary>
+            public const string NonCapTermsSuffix = "nonCapTerms.txt";
+        }
+
+        public static class TokenClasses
+        {
+            /// <summary>
+            ///     name of the all classes rule
+            /// </summary>
+            public const string AllRule = "ALL_CLASSES_RULE";
+
+            /// <summary>
+            /// Suffix of the resource file with the token classes description.
+            /// </summary>
+            public const string ClassDescriptionSuffix = "classes.cfg";
+        }
     }
 }
