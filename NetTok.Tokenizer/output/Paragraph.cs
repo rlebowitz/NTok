@@ -1,12 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+ * NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -25,130 +29,73 @@ using System.Text;
 
 namespace NetTok.Tokenizer.Output
 {
-
-	/// <summary>
-	/// Represents a paragraph with its text units.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class Paragraph
-	{
-
-	  // start index of the paragraph
-	  private int startIndex;
-
-	  // the end index of the paragraph
-	  private int endIndex;
-
-	  // list with the text units of the paragraph
-	  private IList<TextUnit> textUnits;
+    /// <summary>
+    ///     Represents a paragraph with its text units.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class Paragraph
+    {
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="Paragraph" />.
+        /// </summary>
+        public Paragraph()
+        {
+            StartIndex = 0;
+            EndIndex = 0;
+            TextUnits = new List<TextUnit>();
+        }
 
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="Paragraph"/>.
-	  /// </summary>
-	  public Paragraph()
-	  {
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="Paragraph" /> that contains the given text units.
+        /// </summary>
+        /// <param name="textUnits">
+        ///     a list of text units
+        /// </param>
+        public Paragraph(IList<TextUnit> textUnits)
+        {
+            TextUnits = textUnits;
+        }
 
-		this.StartIndex = 0;
-		this.EndIndex = 0;
-		this.TextUnits = new List<TextUnit>();
-	  }
+        private IList<TextUnit> Units { get; set; }
 
-
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="Paragraph"/> that contains the given text units.
-	  /// </summary>
-	  /// <param name="textUnits">
-	  ///          a list of text units </param>
-	  public Paragraph(IList<TextUnit> textUnits)
-	  {
-
-		this.TextUnits = textUnits;
-	  }
+        /// <summary>The start index.</summary>
+        public int StartIndex { get; set; }
 
 
-	  /// <returns> the start index </returns>
-	  public virtual int StartIndex
-	  {
-		  get
-		  {
-    
-			return this.startIndex;
-		  }
-		  set
-		  {
-    
-			this.startIndex = value;
-		  }
-	  }
+        /// <summary>The end index.</summary>
+        public int EndIndex { get; set; }
 
+        /// <summary>The list with the text units.</summary>
+        public IList<TextUnit> TextUnits
+        {
+            get => Units;
+            set
+            {
+                Units = value;
+                if (value.Count > 0)
+                {
+                    StartIndex = value[0].StartIndex;
+                    EndIndex = value[^1].EndIndex;
+                }
+                else
+                {
+                    StartIndex = 0;
+                    EndIndex = 0;
+                }
+            }
+        }
 
+        public override string ToString()
+        {
+            var result =
+                new StringBuilder($"Paragraph Start: {StartIndex}{Environment.NewLine}Paragraph End: {EndIndex}{Environment.NewLine}");
+            foreach (var unit in TextUnits)
+            {
+                result.Append(unit);
+            }
 
-
-	  /// <returns> the end index </returns>
-	  public virtual int EndIndex
-	  {
-		  get
-		  {
-    
-			return this.endIndex;
-		  }
-		  set
-		  {
-    
-			this.endIndex = value;
-		  }
-	  }
-
-
-
-
-	  /// <returns> the list with the text units </returns>
-	  public virtual IList<TextUnit> TextUnits
-	  {
-		  get
-		  {
-    
-			return this.textUnits;
-		  }
-		  set
-		  {
-    
-			this.textUnits = value;
-			if (value.Count > 0)
-			{
-			  this.StartIndex = value[0].StartIndex;
-			  this.EndIndex = value[value.Count - 1].EndIndex;
-			}
-			else
-			{
-			  this.StartIndex = 0;
-			  this.EndIndex = 0;
-			}
-		  }
-	  }
-
-
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override string ToString()
-	  {
-
-//JAVA TO C# CONVERTER TODO TASK: The following line has a Java format specifier which cannot be directly translated to .NET:
-		StringBuilder result = new StringBuilder(string.Format("Paragraph Start: %d%nParagraph End: %d%n", this.StartIndex, this.EndIndex));
-
-		// add text units
-		foreach (TextUnit oneTu in this.TextUnits)
-		{
-		  result.Append(oneTu.ToString());
-		}
-
-		return result.ToString();
-	  }
-	}
-
+            return result.ToString();
+        }
+    }
 }

@@ -31,7 +31,7 @@ using NetTok.Tokenizer.Exceptions;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer
+namespace NetTok.Tokenizer.Descriptions
 {
     /// <summary>
     ///     Abstract class that provides common methods to manage the content of description files.
@@ -39,56 +39,6 @@ namespace NetTok.Tokenizer
     /// </summary>
     public abstract class Description
     {
-        /// <summary>
-        ///     name of the element with the definitions in the description files
-        /// </summary>
-        public const string Definitions = "DEFINITIONS";
-
-        /// <summary>
-        ///     attribute of a definition element that contains the regular expression
-        /// </summary>
-        public const string DefinitionRegularExpression = "regexp";
-
-        /// <summary>
-        ///     attribute of a definition or list element that contains the class name
-        /// </summary>
-        public const string DefinitionClass = "class";
-
-        /// <summary>
-        ///     name of the element with the lists in the description files
-        /// </summary>
-        public const string Lists = "LISTS";
-
-        /// <summary>
-        ///     attribute of a list element that point to the list file
-        /// </summary>
-        public const string ListFile = "file";
-
-        /// <summary>
-        ///     attribute of a list element that contains the encoding of the list file
-        /// </summary>
-        public const string ListEncoding = "encoding";
-
-        /// <summary>
-        ///     name of the element with the rules in the description files
-        /// </summary>
-        public const string Rules = "RULES";
-
-        /// <summary>
-        ///     single line in descriptions that marks the start of the lists section
-        /// </summary>
-        public const string ListsMarker = "LISTS:";
-
-        /// <summary>
-        ///     single line in descriptions that marks the start of the definitions section
-        /// </summary>
-        public const string DefinitionsMarker = "DEFINITIONS:";
-
-        /// <summary>
-        ///     single line in descriptions that marks the start of the rules section
-        /// </summary>
-        public const string RulesMarker = "RULES:";
-
         // regular expression for matching references used in regular expressions of config files
         private static readonly Regex ReferencesRegex = new Regex("\\<[A-Za-z0-9_]+\\>");
 
@@ -102,7 +52,9 @@ namespace NetTok.Tokenizer
         public Dictionary<Regex, string> RegExpMap { get; set; }
 
         /// <returns> the class members map </returns>
-        public virtual Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
+        public Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
+
+        protected static char[] Delimiters { get; } = new[] {':', '\t'};
 
         /// <summary>
         ///     Reads the embedded macro configuration file for the specified language and adds its data to the specified map.
@@ -128,15 +80,14 @@ namespace NetTok.Tokenizer
                     continue;
                 }
 
-                var separator = line.IndexOf(":", StringComparison.Ordinal);
-                if (separator == -1)
+                var sections = line.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
+                if (sections.Length != 2)
                 {
-                    throw new InitializationException(
-                        $"There is a missing separator in file: {fileName} at line: {line}");
+                    throw new InitializationException($"File: {fileName} Line: {line} is not properly formatted as a Macros line.");
                 }
 
-                var macroName = line.Substring(0, separator).Trim();
-                var regularExpressionString = line[(separator + 1)..].Trim();
+                var macroName = sections[0].Trim();
+                var regularExpressionString = sections[1].Trim();
                 // expand possible macros
                 regularExpressionString = ReplaceReferences(regularExpressionString, macroMap);
                 macroMap[macroName] = regularExpressionString;
@@ -162,7 +113,7 @@ namespace NetTok.Tokenizer
                     continue; // skip any blank lines or comment lines.
                 }
 
-                if (line.Equals(ListsMarker))
+                if (line.Equals(Constants.Descriptions.ListsMarker))
                 {
                     break;
                 }
@@ -186,7 +137,7 @@ namespace NetTok.Tokenizer
                     continue; // skip any blank lines or comment lines.
                 }
 
-                if (line.Equals(DefinitionsMarker))
+                if (line.Equals(Constants.Descriptions.DefinitionsMarker))
                 {
                     break;
                 }
@@ -220,12 +171,13 @@ namespace NetTok.Tokenizer
                     continue; // skip blank lines and comments
                 }
 
-                if (line.Equals(RulesMarker))
+                if (line.Equals(Constants.Descriptions.RulesMarker))
                 {
                     break;
                 }
 
-                var sections = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                var sections = line.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
+                
                 if (!line.StartsWith("COLON") && sections.Length != 3)
                 {
                     throw new InitializationException($"Line: {line} is not properly formatted as a Definitions line.");
@@ -298,15 +250,14 @@ namespace NetTok.Tokenizer
                     continue; // skip any blank or comment lines.
                 }
 
-                var sections = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                if (sections.Length != 3)
+                var sections = line.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
+                if (sections.Length < 2)
                 {
                     throw new InitializationException($"Line: {line} is not properly formatted as a Rules line.");
                 }
 
                 var ruleName = sections[0].Trim();
                 var regularExpressionPattern = sections[1].Trim();
-                var className = sections[2].Trim();
                 // expand definitions
                 regularExpressionPattern = ReplaceReferences(regularExpressionPattern, definitionsMap);
                 // expand possible macros
@@ -315,9 +266,9 @@ namespace NetTok.Tokenizer
                 var regularExpression = new Regex(regularExpressionPattern, RegexOptions.Compiled);
                 RulesMap[ruleName] = regularExpression;
                 // if rule has a class, add regular expression to regular expression map
-                if (className.Length > 0)
+                if (sections.Length == 3 && sections[2].Trim().Length > 0)
                 {
-                    RegExpMap[regularExpression] = className;
+                    RegExpMap[regularExpression] = sections[2].Trim();
                 }
             }
         }
@@ -340,12 +291,12 @@ namespace NetTok.Tokenizer
                     continue; // skip blank and comment lines.
                 }
 
-                if (line.Equals(DefinitionsMarker))
+                if (line.Equals(Constants.Descriptions.DefinitionsMarker))
                 {
                     break;
                 }
 
-                var sections = line.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                var sections = line.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
                 if (sections.Length != 2)
                 {
                     throw new InitializationException($"Line: {line} is not properly formatted as a Lists line.");
@@ -379,7 +330,7 @@ namespace NetTok.Tokenizer
                     continue; // skip blank and comment lines.
                 }
 
-                var sections = line.Split('#', StringSplitOptions.RemoveEmptyEntries);
+                var sections = line.Split(new char[]{'#', '\t'}, StringSplitOptions.RemoveEmptyEntries);
                 if (sections.Length == 0)
                 {
                     continue;

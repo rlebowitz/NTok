@@ -153,10 +153,10 @@ namespace NetTok.Tests.Integration
         /// <param name="language">
         ///     the language of the input file
         /// </param>
-        /// <param name="fileName">
+        /// <param name="expectedFileName">
         ///     the result file name
         /// </param>
-        private void CompareResults(string inputFileName, string language, string fileName)
+        private void CompareResults(string inputFileName, string language, string expectedFileName)
         {
             Console.WriteLine(inputFileName);
             // tokenize input file
@@ -164,27 +164,28 @@ namespace NetTok.Tests.Integration
             var input = new string(reader.ReadToEnd());
             var result = new StringBuilder();
             // print result as paragraphs with text units and tokens
-            foreach (var onePara in Outputter.CreateParagraphs(Tokenizer.Tokenize(input, language)))
+            var tokens = Tokenizer.Tokenize(input, language);
+            foreach (var paragraph in Outputter.CreateParagraphs(tokens))
             {
-                result.AppendLine(onePara.ToString());
+                result.AppendLine(paragraph.ToString());
             }
 
             // compare line by line with expected result
-            using var inputReader = new StreamReader(ResourceManager.Read(inputFileName));
-            using var resourceReader = new StreamReader(ResourceManager.Read(fileName));
+             using var resultReader = new StringReader(result.ToString());
+            using var expectedReader = new StreamReader(ResourceManager.Read(expectedFileName));
             var lineCount = 1;
-            string resLine;
-            while ((resLine = resourceReader.ReadLine()) != null)
+            string expected;
+            while ((expected = expectedReader.ReadLine()) != null)
             {
-                var inputLine = inputReader.ReadLine();
-                Assert.NotNull(inputLine);
-                if (!inputLine.Equals(resLine))
+                var actual = resultReader.ReadLine();
+                Assert.NotNull(actual);
+                if (!actual.Equals(expected))
                 {
                     Output.WriteLine(
-                        $"File: {fileName}\t Line: {lineCount}\t Input: {inputLine}\t Resource: {resLine}");
+                        $"File: {expectedFileName}\t Line: {lineCount}\t Input: {actual}\t Resource: {expected}");
                 }
 
-                Assert.Equal(resLine, inputLine);
+                Assert.Equal(expected, actual);
                 lineCount++;
             }
         }

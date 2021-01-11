@@ -1,12 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 /*
- * JTok
- * A configurable tokenizer implemented in Java
+* NTok
+ * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
- * (C) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
+ * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
  *   Author: Joerg Steffen, steffen@dfki.de
+ *
+ * (c) 2021 - Finaltouch IT LLC
+ *   Author:  Robert Lebowitz, lebowitz@finaltouch.com
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU Lesser General Public
@@ -25,130 +29,76 @@ using System.Text;
 
 namespace NetTok.Tokenizer.Output
 {
+    /// <summary>
+    ///     Represents a text unit with its tokens.
+    ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
+    /// </summary>
+    public class TextUnit
+    {
+        /// <summary>
+        ///     Creates a new instance of <seealso cref="TextUnit" />.
+        /// </summary>
+        public TextUnit()
+        {
+            StartIndex = 0;
+            EndIndex = 0;
+            Tokens = new List<Token>();
+        }
 
-	/// <summary>
-	/// Represents a text unit with its tokens.
-	/// 
-	/// @author Joerg Steffen, DFKI
-	/// </summary>
-	public class TextUnit
-	{
+        /// <summary>
+        ///     Creates a new instance of TextUnit" containing the given tokens.
+        /// </summary>
+        /// <param name="tokens">A list of tokens.</param>
+        public TextUnit(IList<Token> tokens)
+        {
+            Tokens = tokens;
+        }
 
-	  // start index of the text unit
-	  private int startIndex;
+        // start index of the text unit
 
-	  // end index of the text unit
-	  private int endIndex;
+        // end index of the text unit
 
-	  // list with the tokens of the text unit
-	  private IList<Token> tokens;
+        // list with the tokens of the text unit
+        private IList<Token> TokenList { get; set; }
 
+        /// <summary>The start index.</summary>
+        public int StartIndex { get; set; }
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="TextUnit"/>.
-	  /// </summary>
-	  public TextUnit()
-	  {
+        /// <summary>The end index.</summary>
+        public int EndIndex { get; set; }
 
-		this.StartIndex = 0;
-		this.EndIndex = 0;
-		this.Tokens = new List<Token>();
-	  }
+        /// <summary>The token list.</summary>
+        public IList<Token> Tokens
+        {
+            get => TokenList;
+            set
+            {
+                TokenList = value;
+                if (value.Count > 0)
+                {
+                    StartIndex = value[0].StartIndex;
+                    EndIndex = value[^1].EndIndex;
+                }
+                else
+                {
+                    StartIndex = 0;
+                    EndIndex = 0;
+                }
+            }
+        }
 
+        public override string ToString()
+        {
+            var result =
+                new StringBuilder(
+                    $"  Text Unit Start: {StartIndex}{Environment.NewLine}  Text Unit End: {EndIndex}{Environment.NewLine}");
+            // add tokens
+            foreach (var token in Tokens)
+            {
+                result.Append(token);
+            }
 
-	  /// <summary>
-	  /// Creates a new instance of <seealso cref="TextUnit"/> containing the given tokens.
-	  /// </summary>
-	  /// <param name="tokens">
-	  ///          a list of tokens </param>
-	  public TextUnit(IList<Token> tokens)
-	  {
-
-		this.Tokens = tokens;
-	  }
-
-
-	  /// <returns> the start index </returns>
-	  public virtual int StartIndex
-	  {
-		  get
-		  {
-    
-			return this.startIndex;
-		  }
-		  set
-		  {
-    
-			this.startIndex = value;
-		  }
-	  }
-
-
-
-
-	  /// <returns> the end index </returns>
-	  public virtual int EndIndex
-	  {
-		  get
-		  {
-    
-			return this.endIndex;
-		  }
-		  set
-		  {
-    
-			this.endIndex = value;
-		  }
-	  }
-
-
-
-
-	  /// <returns> the token list </returns>
-	  public virtual IList<Token> Tokens
-	  {
-		  get
-		  {
-    
-			return this.tokens;
-		  }
-		  set
-		  {
-    
-			this.tokens = value;
-			if (value.Count > 0)
-			{
-			  this.StartIndex = value[0].StartIndex;
-			  this.EndIndex = value[value.Count - 1].EndIndex;
-			}
-			else
-			{
-			  this.StartIndex = 0;
-			  this.EndIndex = 0;
-			}
-		  }
-	  }
-
-
-
-
-	  /// <summary>
-	  /// {@inheritDoc}
-	  /// </summary>
-	  public override string ToString()
-	  {
-
-//JAVA TO C# CONVERTER TODO TASK: The following line has a Java format specifier which cannot be directly translated to .NET:
-		StringBuilder result = new StringBuilder(string.Format("  Text Unit Start: %d%n  Text Unit End: %d%n", this.StartIndex, this.EndIndex));
-
-		// add tokens
-		foreach (Token oneToken in this.Tokens)
-		{
-		  result.Append(oneToken.ToString());
-		}
-
-		return result.ToString();
-	  }
-	}
-
+            return result.ToString();
+        }
+    }
 }

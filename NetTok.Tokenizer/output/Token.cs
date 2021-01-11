@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using NetTok.Tokenizer.Descriptions;
 
 /*
   * NTok

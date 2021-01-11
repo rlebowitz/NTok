@@ -27,7 +27,7 @@ using System.Text.RegularExpressions;
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-namespace NetTok.Tokenizer
+namespace NetTok.Tokenizer.Descriptions
 {
     /// <summary>
     ///     Manages the content of a clitics description file.

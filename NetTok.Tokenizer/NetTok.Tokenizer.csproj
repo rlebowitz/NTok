@@ -5,12 +5,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="RegExp\**" />
+    <EmbeddedResource Remove="RegExp\**" />
+    <None Remove="RegExp\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Annotate\CharacterEnumerable.cs" />
+    <Compile Remove="Exceptions\LanguageNotSupportedException.cs" />
     <Compile Remove="FileTools.cs" />
     <Compile Remove="Match.cs" />
-    <Compile Remove="RegExp\DkBricsRegExp.cs" />
-    <Compile Remove="RegExp\DkBricsRegExpFactory.cs" />
-    <Compile Remove="RegExp\Match.cs" />
   </ItemGroup>
 
   <ItemGroup>
