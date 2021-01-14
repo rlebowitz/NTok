@@ -52,11 +52,6 @@ namespace NetTok.Tokenizer.Descriptions
 
         public override void Load(IDictionary<string, string> macrosMap)
         {
-            DefinitionsMap = new Dictionary<string, Regex>();
-            RulesMap = new Dictionary<string, Regex>();
-            RegExpMap = new Dictionary<Regex, string>();
-            ClassMembersMap = new Dictionary<string, HashSet<string>>();
-
             using (var reader =
                 new StreamReader(ResourceManager.Read($"{Language}_{Constants.Abbreviations.DescriptionSuffix}")))
             {
@@ -65,7 +60,7 @@ namespace NetTok.Tokenizer.Descriptions
                 // read lists
                 LoadAbbreviationsLists(reader);
                 // read definitions
-                IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
+                var definitionsMap = new Dictionary<string, string>();
                 LoadDefinitions(reader, macrosMap, definitionsMap);
                 RulesMap[Constants.Abbreviations.AllRule] = CreateAllRule(definitionsMap);
             }

@@ -46,19 +46,26 @@ namespace NetTok.Tokenizer.Descriptions
         protected Description(string language)
         {
             Language = language ?? "default";
+            DefinitionsMap = new Dictionary<string, Regex>();
+            RulesMap = new Dictionary<string, Regex>();
+            RegexTokenClassMap = new Dictionary<Regex, string>();
+            ClassMembersMap = new Dictionary<string, HashSet<string>>();
         }
 
-        /// <returns> the definitions map </returns>
-        public Dictionary<string, Regex> DefinitionsMap { get; set; }
+        /// <summary>
+        /// The definitions map maps the name of a definition to the Regex that is used to find
+        /// instances of a token class within a string.
+        /// </summary>
+        public IDictionary<string, Regex> DefinitionsMap { get; }
 
         /// <returns> the rules map </returns>
-        public Dictionary<string, Regex> RulesMap { get; set; }
+        public IDictionary<string, Regex> RulesMap { get; set; }
 
-        /// <returns> the regular expressions map </returns>
-        public Dictionary<Regex, string> RegExpMap { get; set; }
+        /// <returns>A dictionary that maps a regular expression to the name of the name of the class that it is used to identify.</returns>
+        public IDictionary<Regex, string> RegexTokenClassMap { get; set; }
 
         /// <returns> the class members map </returns>
-        public Dictionary<string, HashSet<string>> ClassMembersMap { get; set; }
+        public IDictionary<string, HashSet<string>> ClassMembersMap { get; set; }
 
         protected static char[] Delimiters { get; } = {':', '\t'};
 
@@ -125,19 +132,17 @@ namespace NetTok.Tokenizer.Descriptions
         /// </summary>
         /// <param name="reader">The specified StreamReader</param>
         /// <param name="macrosMap">The specified macro map of names to regular expression pattern strings.</param>
-        /// <param name="definitionMap">The specified map of macro definition names to regular expression pattern strings.</param>
+        /// <param name="definitionToPatternMap">The specified definitions map used in setting up rules.</param>
         /// <exception cref="IOException">
         ///     if there is an error during reading
         /// </exception>
-        public void LoadDefinitions(StreamReader reader, IDictionary<string, string> macrosMap,
-            IDictionary<string, string> definitionMap)
+        public void LoadDefinitions(StreamReader reader, IDictionary<string, string> macrosMap, IDictionary<string, string> definitionToPatternMap)
         {
             Guard.NotNull(reader);
             Guard.NotNull(macrosMap);
-            Guard.NotNull(definitionMap);
+            Guard.NotNull(definitionToPatternMap);
             // init temporary map where to store the regular expression string for each class
-            IDictionary<string, StringBuilder> map = new Dictionary<string, StringBuilder>();
-
+            var classNameToPatternMap = new Dictionary<string, StringBuilder>();
             string line;
             while ((line = reader.ReadLine()?.Trim()) != null)
             {
@@ -175,28 +180,27 @@ namespace NetTok.Tokenizer.Descriptions
                     throw new ProcessingException($"empty regular expression in line {line}");
                 }
 
-                switch (map.ContainsKey(className))
+                switch (classNameToPatternMap.ContainsKey(className))
                 {
                     case false:
                     {
                         // if there is no old entry, create a new one
                         var newRegExpr = new StringBuilder(regularExpressionPattern);
-                        map[className] = newRegExpr;
+                        classNameToPatternMap[className] = newRegExpr;
                         break;
                     }
                     default:
                         // extend regular expression pattern with another disjunct
-                        map[className].Append('|').Append(regularExpressionPattern);
+                        classNameToPatternMap[className].Append('|').Append(regularExpressionPattern);
                         break;
                 }
 
-                // save definition
-                definitionMap[definitionName] = regularExpressionPattern;
+                // map the definition's regular expression pattern to the definition name 
+                definitionToPatternMap[definitionName] = regularExpressionPattern;
             }
 
-            // create regular expressions from regular expression pattern strings and store them
-            // in the definitions map
-            foreach (var (key, value) in map)
+            // build the map of definition names to their actual Regex instances.
+            foreach (var (key, value) in classNameToPatternMap)
             {
                 DefinitionsMap[key] = new Regex(value.ToString());
             }
@@ -208,11 +212,11 @@ namespace NetTok.Tokenizer.Descriptions
         ///     that matches all tokens of that rule.
         /// </summary>
         /// <param name="reader">The specified StreamReader</param>
-        /// <param name="definitionsMap">The specified map of definition names to regular expression pattern strings</param>
         /// <param name="macrosMap">The specified map of macro names to regular expression pattern strings.</param>
+        /// <param name="definitionsMap">The definitions to regular expression pattern map.</param>
         /// <exception cref="IOException">Thrown if there an error occurs while reading the embedded configuration file.</exception>
-        public void LoadRules(StreamReader reader, IDictionary<string, string> definitionsMap,
-            IDictionary<string, string> macrosMap)
+        public void LoadRules(StreamReader reader, IDictionary<string, string> macrosMap,
+            IDictionary<string, string> definitionsMap)
         {
             Guard.NotNull(reader);
             Guard.NotNull(definitionsMap);
@@ -243,7 +247,7 @@ namespace NetTok.Tokenizer.Descriptions
                 // if rule has a class, add regular expression to regular expression map
                 if (sections.Length == 3 && sections[2].Trim().Length > 0)
                 {
-                    RegExpMap[regularExpression] = sections[2].Trim();
+                    RegexTokenClassMap[regularExpression] = sections[2].Trim();
                 }
             }
         }
@@ -328,9 +332,9 @@ namespace NetTok.Tokenizer.Descriptions
         /// <param name="regexPattern">
         ///     The string that may contain references to other regular expression patterns.
         /// </param>
-        /// <param name="referenceMap">A map of reference name to regular expression pattern strings.</param>
+        /// <param name="macrosMap">A map of reference name to regular expression pattern strings.</param>
         /// <returns>The modified regular expression string.</returns>
-        protected string ReplaceReferences(string regexPattern, IDictionary<string, string> referenceMap)
+        protected string ReplaceReferences(string regexPattern, IDictionary<string, string> macrosMap)
         {
             var result = regexPattern;
             var matches = ReferencesRegex.Matches(regexPattern); // searches for strings enclosed by angle brackets <>
@@ -339,7 +343,7 @@ namespace NetTok.Tokenizer.Descriptions
             foreach (var reference in references)
             {
                 var name = reference.Value[1..^1]; // get reference name by removing opening and closing angle brackets
-                if (!referenceMap.ContainsKey(name))
+                if (!macrosMap.ContainsKey(name))
                 {
                     throw new ProcessingException($"The reference: {name} was not found in the reference map.");
                 }
@@ -348,7 +352,7 @@ namespace NetTok.Tokenizer.Descriptions
                 //    string.Format("({0})", Matcher.quoteReplacement(refRegExpr)));
                 // ToDo - not sure exactly what the above lines do, this is my best guess:
                 var regex = new Regex(reference.Value); // the full name of the reference with angle brackets
-                result = regex.Replace(result, $"({referenceMap[name]})", 1);
+                result = regex.Replace(result, $"({macrosMap[name]})", 1);
             }
 
             return result;
@@ -357,7 +361,6 @@ namespace NetTok.Tokenizer.Descriptions
         /// <summary>
         ///     Creates a rule that matches ALL definitions.
         /// </summary>
-        /// <param name="definitionsMap">The specified definitions map.</param>
         /// <returns>A Regex matching all definitions.</returns>
         public static Regex CreateAllRule(IDictionary<string, string> definitionsMap)
         {

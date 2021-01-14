@@ -46,19 +46,15 @@ namespace NetTok.Tokenizer.Descriptions
 
         public override void Load(IDictionary<string, string> macrosMap)
         {
-            DefinitionsMap = new Dictionary<string, Regex>();
-            RulesMap = new Dictionary<string, Regex>();
-            RegExpMap = new Dictionary<Regex, string>();
-
             using var reader =
                 new StreamReader(ResourceManager.Read($"{Language}_{Constants.Clitics.DescriptionSuffix}"));
             // read config file to definitions start
             ReadToDefinitions(reader);
             // read definitions
-            IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
+            var definitionsMap = new Dictionary<string, string>();
             LoadDefinitions(reader, macrosMap, definitionsMap);
             // when loadDefinitions returns the reader has reached the rules section; read rules
-            LoadRules(reader, definitionsMap, macrosMap);
+            LoadRules(reader, macrosMap, definitionsMap);
         }
     }
 }

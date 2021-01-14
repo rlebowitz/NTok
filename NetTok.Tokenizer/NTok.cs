@@ -134,10 +134,8 @@ namespace NetTok.Tokenizer
             IdentifyTokens(input, resource);
             IdentifyPunctuation(input, resource);
             IdentifyAbbreviations(input, resource);
-
             // identify sentences and paragraphs
             IdentifyTus(input, resource);
-
             // return result
             return input;
         }
@@ -158,30 +156,23 @@ namespace NetTok.Tokenizer
             var tokenStart = 0;
             // flag for indicating if new token was found
             var tokenFound = false;
-
             // get classes root annotation
             var rootClass = resource.ClassesRoot.TagName();
-
-            // iterate over input
-//            for (var c = input.First; c != default; c = input.Next)
-            for (var index = 0; index < input.Length; index++)
+            int index;
+            for (index = 0; index < input.Length; index++)
             {
                 var c = input[index];
 
                 if (char.IsWhiteSpace(c) || c == '\u00a0')
                 {
-                    if (!tokenFound)
+                    if (tokenFound)
                     {
-                        continue;
+                        Annotate(input, ClassAnnotation, rootClass, tokenStart, index,
+                            input.Substring(tokenStart, index), resource);
+                        tokenFound = false;
                     }
-
-                    // annotate newly identified token
-                    Annotate(input, ClassAnnotation, rootClass, tokenStart, input.Index,
-                        input.Substring(tokenStart, input.Index - tokenStart), resource);
-                    tokenFound = false;
                 }
-                else if (!tokenFound)
-                {
+                else if (!tokenFound) {
                     // a new token starts here, after some whitespaces
                     tokenFound = true;
                     tokenStart = input.Index;
@@ -191,8 +182,7 @@ namespace NetTok.Tokenizer
             // annotate last token
             if (tokenFound)
             {
-                Annotate(input, ClassAnnotation, rootClass, tokenStart, input.Index,
-                    input.Substring(tokenStart, input.Index - tokenStart), resource);
+                Annotate(input, ClassAnnotation, rootClass, tokenStart, index, input.Substring(tokenStart, index), resource);
             }
         }
 
@@ -906,40 +896,36 @@ namespace NetTok.Tokenizer
         ///     the string for which to find the class name
         /// </param>
         /// <param name="regex">
-        ///     the regular expression that found the string as a match, {@code null} if string wasn't
+        ///     the regular expression that found the string as a match, null if string wasn't
         ///     found via a regular expression
         /// </param>
         /// <param name="description">
-        ///     a description that contains everything needed for identifying the class
+        ///     A description that contains everything needed for identifying the class.
         /// </param>
-        /// <returns> the class name </returns>
-        /// <exception cref="ProcessingException">
-        ///     if class of string can't be identified
-        /// </exception>
+        /// <returns>The string's class name.</returns>
+        /// <exception cref="ProcessingException">Thrown if the string's class can't be identified.</exception>
         private static string IdentifyClass(string s, Regex regex, Description description)
         {
-            // first try to identify class via the regular expression
+            // Using the Regex -> TokenClassName map, try to identify the string's class using
+            // the regular expression that matched the input string, assuming the regular expression exists.
             if (regex != null)
             {
-                IDictionary<Regex, string> regExpMap = description.RegExpMap;
-                //               var @class = regExpMap[regex];
-                if (regExpMap.ContainsKey(regex))
+                if (description.RegexTokenClassMap.ContainsKey(regex))
                 {
-                    return regExpMap[regex];
+                    return description.RegexTokenClassMap[regex];
                 }
             }
 
             // get hash map with classes
-            IDictionary<string, Regex> definitionsMap = description.DefinitionsMap;
+            var definitionsMap = description.DefinitionsMap;
             // iterate over classes
-            foreach (var entry in definitionsMap)
+            foreach (var (key, value) in definitionsMap)
             {
                 // check if string is of that class
-                var oneClass = entry.Key;
-                var oneRe = entry.Value;
-                if (oneRe.IsMatch(s))
+                //var oneRe = key.Value;
+                if (value.IsMatch(s))
                 {
-                    return oneClass;
+                    return key;
                 }
             }
 

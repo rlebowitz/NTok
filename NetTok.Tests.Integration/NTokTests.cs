@@ -158,7 +158,7 @@ namespace NetTok.Tests.Integration
         /// </param>
         private void CompareResults(string inputFileName, string language, string expectedFileName)
         {
-            Console.WriteLine(inputFileName);
+            Output.WriteLine(inputFileName);
             // tokenize input file
             using var reader = new StreamReader(ResourceManager.Read(inputFileName));
             var input = new string(reader.ReadToEnd());
@@ -171,7 +171,7 @@ namespace NetTok.Tests.Integration
             }
 
             // compare line by line with expected result
-             using var resultReader = new StringReader(result.ToString());
+            using var resultReader = new StringReader(result.ToString());
             using var expectedReader = new StreamReader(ResourceManager.Read(expectedFileName));
             var lineCount = 1;
             string expected;
@@ -182,9 +182,11 @@ namespace NetTok.Tests.Integration
                 if (!actual.Equals(expected))
                 {
                     Output.WriteLine(
-                        $"File: {expectedFileName}\t Line: {lineCount}\t Input: {actual}\t Resource: {expected}");
+                        $"Error - File: {expectedFileName}\t Line: {lineCount}\t Input: {actual}\t Resource: {expected}");
                 }
-
+                else
+                    Output.WriteLine(
+                    $"File: {expectedFileName}\t Line: {lineCount}\t Input: {actual}\t Resource: {expected}");
                 Assert.Equal(expected, actual);
                 lineCount++;
             }

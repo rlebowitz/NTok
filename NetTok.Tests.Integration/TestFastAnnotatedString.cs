@@ -32,7 +32,7 @@ using Xunit.Abstractions;
 namespace NetTok.Tests.Integration
 {
     /// <summary>
-    ///     Test class for <seealso cref="FastAnnotatedString" />.
+    ///     Test class for FastAnnotatedString.
     ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
     /// </summary>
     public class TestFastAnnotatedString
@@ -47,7 +47,7 @@ namespace NetTok.Tests.Integration
         ///     Tests annotated Strings.
         /// </summary>
         [Fact]
-        public void FastAnnotatedStringTest()
+        public void AnnotatedStringTest1()
         {
             var input1 = new FastAnnotatedString("This is a test.");
             // 0123456789012345
@@ -58,10 +58,15 @@ namespace NetTok.Tests.Integration
             input1.Annotate("type", "punct", 14, 15);
             CompareResults(input1, "annotated-string-expected-1.txt");
 
+           
+        }
+
+        [Fact]
+        public void AnnotatedStringTest2()
+        {
             var input2 = new FastAnnotatedString("sdfslkdflsdfsldfksdf");
             input2.Annotate("type", "tok", 5, 15);
             Assert.Equal("kdflsdfsld\t5-15\ttok", input2.ToString("type").Trim());
-
             input2.Annotate("type", "mid", 9, 12);
             CompareResults(input2, "annotated-string-expected-2.txt");
         }

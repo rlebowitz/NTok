@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using NetTok.Tokenizer.Utilities;
 
 /*
@@ -37,23 +36,19 @@ namespace NetTok.Tokenizer.Descriptions
     public class TokenClassesDescription : Description
     {
         /// <summary>
-        ///     Creates a new instance of <seealso cref="TokenClassesDescription" /> for the given language.
+        ///     Creates a new instance of TokenClassesDescription for the given language.
         /// </summary>
         /// <param name="language">The specified language.</param>
         public TokenClassesDescription(string language) : base(language) { }
 
         public override void Load(IDictionary<string, string> macrosMap)
         {
-            DefinitionsMap = new Dictionary<string, Regex>();
-            RulesMap = new Dictionary<string, Regex>();
-            RegExpMap = new Dictionary<Regex, string>();
-
             using var reader =
                 new StreamReader(ResourceManager.Read($"{Language}_{Constants.TokenClasses.ClassDescriptionSuffix}"));
             // read config file to definitions start
             ReadToDefinitions(reader);
             // read definitions
-            IDictionary<string, string> definitionsMap = new Dictionary<string, string>();
+            var definitionsMap = new Dictionary<string, string>();
             LoadDefinitions(reader, macrosMap, definitionsMap);
             RulesMap[Constants.TokenClasses.AllRule] = CreateAllRule(definitionsMap);
         }

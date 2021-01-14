@@ -32,9 +32,8 @@ using NetTok.Tokenizer.Utilities;
 namespace NetTok.Tokenizer.Annotate
 {
     /// <summary>
-    ///     <seealso cref="FastAnnotatedString" /> is a fast implementation of the <seealso cref="IAnnotatedString" />
-    ///     interface. It
-    ///     reserves an array of objects and an array of booleans for each newly introduced annotation key.
+    ///     FastAnnotatedString is a fast implementation of the IAnnotatedString interface.
+    ///     It reserves an array of objects and an array of booleans for each newly introduced annotation key.
     ///     This provides fast access at the cost of memory. So only introduce new annotation keys if necessary.
     ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
     /// </summary>
@@ -49,10 +48,8 @@ namespace NetTok.Tokenizer.Annotate
         /// <param name="inputText">The text to annotate.</param>
         public FastAnnotatedString(string inputText)
         {
-//            Content = Guard.NotNull(inputText)?.ToCharArray();
             Content = Guard.NotNull(inputText);
             Index = 0;
-//            EndIndex = inputText.Length;
             Annotations = new Dictionary<string, object>();
             Borders = new Dictionary<string, bool[]>();
             CurrentKey = null;
@@ -70,10 +67,7 @@ namespace NetTok.Tokenizer.Annotate
         public IDictionary<string, object> Annotations { get; }
 
         public IDictionary<string, bool[]> Borders { get; }
-        // index position at the end of the string
 
-        // content of the string as a character array
-        //    public char[] Content { get; }
         private string Content { get; }
 
         // last annotation key used
@@ -85,63 +79,8 @@ namespace NetTok.Tokenizer.Annotate
         // last border array used
         private bool[] CurrentBorders { get; set; }
 
-        //public char First
-        //{
-        //    get
-        //    {
-        //        Index = 0;
-        //        return Current;
-        //    }
-        //}
-
-        //public char Last
-        //{
-        //    get
-        //    {
-        //        if (EndIndex != 0)
-        //        {
-        //            Index = EndIndex - 1;
-        //        }
-        //        else
-        //        {
-        //            Index = EndIndex;
-        //        }
-
-        //        return Current;
-        //    }
-        //}
-
-        //public char Next
-        //{
-        //    get
-        //    {
-        //        if (Index < EndIndex - 1)
-        //        {
-        //            Index++;
-        //            return Content[Index];
-        //        }
-
-        //        Index = EndIndex;
-        //        return default;
-        //    }
-        //}
-
-        //public char Previous
-        //{
-        //    get
-        //    {
-        //        if (Index > 0)
-        //        {
-        //            Index--;
-        //            return Content[Index];
-        //        }
-
-        //        return default;
-        //    }
-        //}
-
-        //public int BeginIndex => 0;
         public int Length => Content.Length;
+
         public int Index
         {
             get => _index;
@@ -156,66 +95,15 @@ namespace NetTok.Tokenizer.Annotate
             }
         }
 
-        public char this[int index] =>
-            //if (index < 0 || index > Content.Length - 1)
-            //{
-            //    throw new ArgumentException($"Invalid index {index:D}");
-            //}
-            index < Content.Length - 1 ? Content[index] : default;
+        public char this[int index] => index < Content.Length ? Content[index] : default;
 
         public char SetIndex(int index)
         {
-            //if (index < 0 || index > Content.Length)
-            //{
-            //    throw new IndexOutOfRangeException($"Invalid index {index:D}");
-            //}
-
-            Index = index;
-            return index < Content.Length - 1 ? Content[index] : default;
+             Index = index;
+            return index < Content.Length ? Content[index] : default;
         }
 
-        //public char Current
-        //{
-        //    get
-        //    {
-        //        if (Index >= 0 && Index < EndIndex)
-        //        {
-        //            return Content[Index];
-        //        }
-
-        //        return default;
-        //    }
-        //}
-
-        //public virtual char this[int charIndex]
-        //{
-        //    get
-        //    {
-        //        if (charIndex < 0 || charIndex > EndIndex)
-        //        {
-        //            throw new ArgumentException($"Invalid index {charIndex:D}");
-        //        }
-
-        //        if (charIndex < EndIndex)
-        //        {
-        //            return Content[charIndex];
-        //        }
-
-        //        return default;
-        //    }
-        //}
-
-        public string Substring(int start, int end)
-        {
-            if (start < 0 || end > Content.Length || start > end)
-            {
-                throw new ArgumentException($"Invalid substring range {start:D} - {end:D}");
-            }
-
-            //           return new string(Content, start, end - start);
-            return Content[start..end];
-        }
-
+        public string Substring(int start, int end) => Content[start..end];
 
         public void Annotate(string key, object value, int start, int end)
         {
@@ -427,32 +315,10 @@ namespace NetTok.Tokenizer.Annotate
             return result.ToString();
         }
 
-        //public IEnumerator<char> GetEnumerator()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
         public override string ToString()
         {
             return new string(Content);
         }
-
-        //IEnumerator IEnumerable.GetEnumerator()
-        //{
-        //    return GetEnumerator();
-        //}
-
-        // public char setIndex(int position)
-        //{
-
-        //    if ((position < 0) || (position > this.EndIndex))
-        //    {
-        //        throw new System.ArgumentException(string.Format("Invalid index {0:D}", position));
-        //    }
-        //    this.Index = position;
-        //    return Current();
-        //}
-
 
         public object Clone()
         {
