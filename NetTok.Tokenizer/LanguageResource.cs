@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NetTok.Tokenizer.Descriptions;
@@ -50,25 +50,26 @@ namespace NetTok.Tokenizer
         ///     The specified name of the language for which to load resources.
         /// </param>
         /// <remarks>
-        /// If the specified language is null or non-existent, the language used will be specified as 'default'.
+        ///     If the specified language is null or non-existent, the language used will be specified as 'default'.
         /// </remarks>
         /// <exception cref="InitializationException">
         ///     Thrown if an error occurs while loading any of the various embedded resource files.
         /// </exception>
         public LanguageResource(string language)
         {
-            // init stuff
-            AncestorsMap = new Dictionary<string, List<string>>();
-            PunctuationDescription = null;
-            CliticsDescription = null;
-            AbbreviationDescription = null;
-            ClassesDescription = null;
             Language = language ?? "default";
+            AncestorsMap = new Dictionary<string, List<string>>();
+            MacroDescription = new MacroDescription(Language);
+            PunctuationDescription = new PunctuationDescription(Language);
+            CliticsDescription = new CliticsDescription(Language);
+            AbbreviationDescription = new AbbreviationDescription(Language);
+            ClassesDescription = new TokenClassesDescription(Language);
 
             try
             {
                 // load classes hierarchy
-                using var reader = new StreamReader(ResourceManager.Read($"{Language}_{Constants.Resources.ClassesHierarchy}"));
+                using var reader =
+                    new StreamReader(ResourceManager.Read($"{Language}_{Constants.Resources.ClassesHierarchy}"));
                 var document = XDocument.Parse(reader.ReadToEnd());
                 // set hierarchy root
                 ClassesRoot = document.Root;
@@ -77,37 +78,25 @@ namespace NetTok.Tokenizer
                 MapClasses(ClassesRoot.Elements().ToList());
                 // load macros
                 var macrosMap = new Dictionary<string, string>();
-                MacroDescription = new MacroDescription(Language);
                 MacroDescription.Load(macrosMap);
-
                 // load punctuation description
-                PunctuationDescription = new PunctuationDescription(Language);
                 PunctuationDescription.Load(macrosMap);
-
                 // load clitics description
-                CliticsDescription = new CliticsDescription(Language);
                 CliticsDescription.Load(macrosMap);
-
                 // load abbreviation description
-                AbbreviationDescription = new AbbreviationDescription(Language);
                 AbbreviationDescription.Load(macrosMap);
-
                 // load token classes description document
-                ClassesDescription = new TokenClassesDescription(Language);
                 ClassesDescription.Load(macrosMap);
             }
-            catch (IOException ioe)
+            catch (Exception ex)
             {
-                throw new InitializationException(ioe.Message, ioe);
+                throw new InitializationException(ex.Message, ex);
             }
         }
 
-
-        // name of the language for which this class contains the resources
-
-        // root element of the classes hierarchy
-
-        // name of the root element of the classes hierarchy
+        /// <summary>
+        ///     Tag name of the root element of the classes hierarchy.
+        /// </summary>
         public string ClassesRootName => ClassesRoot?.TagName();
 
         public string Language { get; }
@@ -137,7 +126,7 @@ namespace NetTok.Tokenizer
         public Regex EncliticsMatcher => CliticsDescription.RulesMap[Constants.Clitics.EncliticRule];
 
         /// <summary>The map with the abbreviation lists.</summary>
-        public IDictionary<string, HashSet<string>> AbbreviationLists => AbbreviationDescription.ClassMembersMap;
+        public IDictionary<string, HashSet<string>> AbbreviationMap => AbbreviationDescription.ClassMembersMap;
 
         /// <summary>The matcher for the all abbreviations from the abbreviations description.</summary>
         public Regex AllAbbreviationMatcher => AbbreviationDescription.RulesMap[Constants.Abbreviations.AllRule];
@@ -146,7 +135,6 @@ namespace NetTok.Tokenizer
         ///     The set of the most common terms that only start with a capital letter when they are at the beginning of a sentence
         /// </summary>
         public HashSet<string> NonCapitalizedTerms => AbbreviationDescription.NonCapTerms;
-
 
         /// <summary> the matcher for all token classes from the token classes description </summary>
         public Regex AllClassesMatcher => ClassesDescription.RulesMap[Constants.TokenClasses.AllRule];
@@ -172,20 +160,20 @@ namespace NetTok.Tokenizer
             }
         }
 
-
         /// <summary>
         ///     Creates mappings for the given class in the ancestor maps.
         /// </summary>
         /// <param name="element">A class element.</param>
         private void MapSingleClass(XElement element)
         {
+            var tag = element;
             var key = element.TagName();
             // collect ancestors of element
             var ancestors = new List<string>();
-            while (element.Parent != null && element.Parent != ClassesRoot)
+            while (tag.Parent != null && tag.Parent != ClassesRoot)
             {
-                ancestors.Add(element.Parent.TagName());
-                element = element.Parent;
+                ancestors.Add(tag.Parent.TagName());
+                tag = tag.Parent;
             }
 
             // add list to ancestors map

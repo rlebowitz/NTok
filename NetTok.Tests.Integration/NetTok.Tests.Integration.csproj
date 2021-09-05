@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -17,6 +17,13 @@
     <None Remove="Resources\expected-results\english\randomhouse-hertsgaard-expected.txt" />
     <None Remove="Resources\expected-results\german\amazon-expected.txt" />
     <None Remove="Resources\expected-results\german\german-expected.txt" />
+    <None Remove="Resources\expected-results\test\cliticsTest-expected.txt" />
+    <None Remove="Resources\expected-results\test\misc-expected.txt" />
+    <None Remove="Resources\expected-results\test\numbersTest-expected.txt" />
+    <None Remove="Resources\expected-results\test\paragraphTest-expected.txt" />
+    <None Remove="Resources\expected-results\test\punctuationTest-expected.txt" />
+    <None Remove="Resources\expected-results\test\specialCharactersTest-expected.txt" />
+    <None Remove="Resources\expected-results\test\tuTest-expected.txt" />
     <None Remove="Resources\german\amazon.txt" />
     <None Remove="Resources\german\german.txt" />
     <None Remove="Resources\test\cliticsTest.txt" />
@@ -39,6 +46,13 @@
     <EmbeddedResource Include="Resources\expected-results\english\randomhouse-hertsgaard-expected.txt" />
     <EmbeddedResource Include="Resources\expected-results\german\amazon-expected.txt" />
     <EmbeddedResource Include="Resources\expected-results\german\german-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\test\cliticsTest-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\test\misc-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\test\numbersTest-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\test\paragraphTest-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\test\punctuationTest-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\test\specialCharactersTest-expected.txt" />
+    <EmbeddedResource Include="Resources\expected-results\test\tuTest-expected.txt" />
     <EmbeddedResource Include="Resources\german\amazon.txt" />
     <EmbeddedResource Include="Resources\german\german.txt" />
     <EmbeddedResource Include="Resources\test\cliticsTest.txt" />

@@ -123,7 +123,7 @@ namespace NetTok.Tokenizer.Output
                         throw new ProcessingException($"Undefined class {input.GetAnnotation(NTok.ClassAnnotation)}");
                     }
 
-                    var image = input.Substring(tokenStart, tokenEnd - tokenStart);
+                    var image = input.Substring(tokenStart, tokenEnd);
                     var ptbImage = Token.ApplyPennTreeBankFormat(image, type);
                     // create new element
                     var xmlToken = new XElement(XMLToken,

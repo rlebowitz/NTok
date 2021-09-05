@@ -200,9 +200,9 @@ namespace NetTok.Tokenizer.Descriptions
             }
 
             // build the map of definition names to their actual Regex instances.
-            foreach (var (key, value) in classNameToPatternMap)
+            foreach (var (className, pattern) in classNameToPatternMap)
             {
-                DefinitionsMap[key] = new Regex(value.ToString());
+                DefinitionsMap[className] = new Regex(pattern.ToString(), RegexOptions.Compiled);
             }
         }
 
@@ -352,7 +352,7 @@ namespace NetTok.Tokenizer.Descriptions
                 //    string.Format("({0})", Matcher.quoteReplacement(refRegExpr)));
                 // ToDo - not sure exactly what the above lines do, this is my best guess:
                 var regex = new Regex(reference.Value); // the full name of the reference with angle brackets
-                result = regex.Replace(result, $"({macrosMap[name]})", 1);
+                result = regex.Replace(result, $"{macrosMap[name]}", 1);
             }
 
             return result;

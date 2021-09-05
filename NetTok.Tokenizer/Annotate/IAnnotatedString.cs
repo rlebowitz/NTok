@@ -72,15 +72,16 @@ namespace NetTok.Tokenizer.Annotate
         /// <param name="value">The annotation value.</param>
         /// <param name="beginIndex">The index of the first character of the range.</param>
         /// <param name="endIndex">The index of the character following the last character of the range.</param>
-        void Annotate(string key, object value, int beginIndex, int endIndex);
-
+       // void Annotate(string key, object value, int beginIndex, int endIndex);
+        void Annotate(string key, string value, int beginIndex, int endIndex);
 
         /// <summary>
         ///     Returns the annotation value of the string at the current index for the given annotation key.
         /// </summary>
         /// <param name="key">The annotation key.</param>
-        /// <returns>The annotation value or {@code null} if there is no annotation with the given key at that position </returns>
-        object GetAnnotation(string key);
+        /// <returns>The annotation value or null if there is no annotation with the given key at that position </returns>
+       // object GetAnnotation(string key);
+        string GetAnnotation(string key);
 
         /// <summary>
         ///     Returns the index of the first character annotated with the given annotation key following the
@@ -128,17 +129,9 @@ namespace NetTok.Tokenizer.Annotate
         /// </summary>
         /// <returns>The surface string.</returns>
         string ToString();
-        #region CharacterIterator properties
-        //char First { get; }
-        //char Last { get; }
-        //char Next { get; }
-        //char Previous { get; }
-        //int BeginIndex { get; }
-        //int EndIndex { get; }
+      
         int Index { get; set; }
         int Length { get; }
         char SetIndex(int index);
-      //  char Current { get; }
-        #endregion
     }
 }

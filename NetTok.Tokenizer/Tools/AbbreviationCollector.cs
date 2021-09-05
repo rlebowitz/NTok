@@ -74,7 +74,7 @@ namespace NetTok.Tokenizer.Tools
             // get matchers and lists used to filter the abbreviations
 
             // the lists contains known abbreviations and titles
-            var abbreviationLists = resource.AbbreviationLists;
+            var abbreviationLists = resource.AbbreviationMap;
 
             // this contains the word that only start with a capital letter at
             // the beginning of a sentence; we want to avoid to extract abbreviations

@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
+using NetTok.Tokenizer.Annotate;
 using NetTok.Tokenizer.Exceptions;
+using NetTok.Tokenizer.Output;
 using NetTok.Tokenizer.Utilities;
 
 /*
@@ -37,18 +41,31 @@ namespace NetTok.Tokenizer.Annotate
     ///     This provides fast access at the cost of memory. So only introduce new annotation keys if necessary.
     ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
     /// </summary>
-    public class FastAnnotatedString : IAnnotatedString
+    public class AnnotatedString 
     {
-        // current index within the string
-        private int _index;
 
         /// <summary>
-        ///     Creates a new instance of FastAnnotatedString for the given input text.
+        ///     Creates a new instance of AnnotatedString for the given input text.
         /// </summary>
         /// <param name="inputText">The text to annotate.</param>
-        public FastAnnotatedString(string inputText)
+        public AnnotatedString(string inputText)
         {
-            Content = Guard.NotNull(inputText);
+            Guard.NotNull(inputText);
+            Characters = inputText.ToCharArray();
+            Content = inputText;
+            var startIndex = 0;
+            var endIndex = 0;
+            var matches = Regex.Matches(inputText, "(\r?\n\r?\n)");
+            foreach (var match in matches)
+            {
+                var paragraph = new Paragraph()
+                {
+                    StartIndex                    = startIndex,
+                    EndIndex = 
+                }
+            }
+            Paragraphs.AddRange();
+
             Index = 0;
 //            Annotations = new Dictionary<string, object>();
             Annotations = new Dictionary<string, string[]>();
@@ -66,10 +83,13 @@ namespace NetTok.Tokenizer.Annotate
         ///     character in the annotated string.
         /// </remarks>
 //        public IDictionary<string, object> Annotations { get; }
+
+        public List<Paragraph> Paragraphs { get; } = new List<Paragraph>();
         public IDictionary<string, string[]> Annotations { get; }
 
         public IDictionary<string, bool[]> Borders { get; }
 
+        private char[] Characters { get; set; }
         private string Content { get; }
 
         // last annotation key used
@@ -84,19 +104,7 @@ namespace NetTok.Tokenizer.Annotate
 
         public int Length => Content.Length;
 
-        public int Index
-        {
-            get => _index;
-            set
-            {
-                if (value < 0 || value > Content.Length)
-                {
-                    throw new IndexOutOfRangeException($"Invalid index {value:D}");
-                }
-
-                _index = value;
-            }
-        }
+        public int Index { get; set; }
 
         public char this[int index] => index < Content.Length ? Content[index] : default;
 

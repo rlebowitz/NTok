@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using NetTok.Tokenizer.Utilities;
 
 /*
@@ -85,12 +86,11 @@ namespace NetTok.Tokenizer.Output
                 $"    Token: {$"\"{Image}\"",-15}\tType: {Type}\tStart: {StartIndex}\tEnd: {EndIndex}");
 
             var ptbImage = ApplyPennTreeBankFormat(Image, Type);
-            if (null != ptbImage)
+            if (ptbImage != null)
             {
                 result.Append($"\tPTB: \"{ptbImage}\"");
             }
-
-            result.Append("%n");
+            result.Append(Environment.NewLine);
 
             return result.ToString();
         }
@@ -101,7 +101,7 @@ namespace NetTok.Tokenizer.Output
         /// </summary>
         /// <param name="image">The token image.</param>
         /// <param name="type">The token type.</param>
-        /// <returns>A modified string or {@code null} if no replacement took place.</returns>
+        /// <returns>A modified string or null if no replacement took place.</returns>
         public static string ApplyPennTreeBankFormat(string image, string type)
         {
             string result = null;

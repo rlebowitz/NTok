@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NetTok.Tokenizer;
 using NetTok.Tokenizer.Output;
+using NetTok.Tokenizer.Utilities;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -50,6 +52,17 @@ namespace NetTok.Tests.Integration
 
         private ITestOutputHelper Output { get; }
 
+        [Fact]
+        public void LanguageResourcesTest()
+        {
+            var list = new List<string> {"en", "de", "it", "default"};
+            var resources = Tokenizer.LanguageResources;
+            Assert.Equal(4, resources.Count);
+            foreach (var resource in resources)
+            {
+                Assert.Contains(resource.Key, list);
+            }
+        }
 
         /// <summary>
         ///     Tests the method <seealso cref="NTok.Tokenize(string, string)" />.
@@ -158,6 +171,10 @@ namespace NetTok.Tests.Integration
         /// </param>
         private void CompareResults(string inputFileName, string language, string expectedFileName)
         {
+            Guard.NotNull(inputFileName);
+            Guard.NotNull(language);
+            Guard.NotNull(expectedFileName);
+
             Output.WriteLine(inputFileName);
             // tokenize input file
             using var reader = new StreamReader(ResourceManager.Read(inputFileName));

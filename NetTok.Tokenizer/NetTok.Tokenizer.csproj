@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Annotate\AnnotatedString.cs" />
     <Compile Remove="Annotate\CharacterEnumerable.cs" />
     <Compile Remove="Exceptions\LanguageNotSupportedException.cs" />
     <Compile Remove="FileTools.cs" />

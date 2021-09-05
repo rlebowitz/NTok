@@ -38,13 +38,9 @@ namespace NetTok.Tokenizer.Output
     public static class Outputter
     {
         /// <summary>
-        ///     Creates a list of <seealso cref="Paragraph" />s with <seealso cref="TextUnit" />s and <seealso cref="Token" />s
-        ///     from the given
-        ///     annotated string.
+        ///     Creates a list of Paragraphs with TextUnits and Tokens from the given annotated string.
         /// </summary>
-        /// <param name="input">
-        ///     the annotated string
-        /// </param>
+        /// <param name="input">The annotated string.</param>
         /// <returns> a list of paragraphs </returns>
         public static List<Paragraph> CreateParagraphs(IAnnotatedString input)
         {
@@ -64,7 +60,7 @@ namespace NetTok.Tokenizer.Output
                 if (null != type)
                 {
                     // create new token instance
-                    var tok = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd - tokenStart));
+                    var token = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd));
 
                     // check if token is first token of a paragraph or text unit
                     if (null != input.GetAnnotation(NTok.BorderAnnotation))
@@ -83,7 +79,7 @@ namespace NetTok.Tokenizer.Output
                     }
 
                     // add token to token list
-                    tokenList.Add(tok);
+                    tokenList.Add(token);
                 }
 
                 // set iterator to next token
@@ -125,7 +121,7 @@ namespace NetTok.Tokenizer.Output
                 if (null != type)
                 {
                     // create new token instance
-                    var tok = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd - tokenStart));
+                    var tok = new Token(tokenStart, tokenEnd, type, input.Substring(tokenStart, tokenEnd));
 
                     // add token to token list
                     tokenList.Add(tok);

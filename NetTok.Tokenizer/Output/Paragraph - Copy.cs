@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 /*
-* NTok
+ * NTok
  * A configurable tokenizer implemented in C# based on the Java JTok tokenizer.
  *
  * (c) 2003 - 2014  DFKI Language Technology Lab http://www.dfki.de/lt
@@ -30,68 +30,57 @@ using System.Text;
 namespace NetTok.Tokenizer.Output
 {
     /// <summary>
-    ///     Represents a text unit with its tokens.
+    ///     Represents a paragraph with its text units.
     ///     @author Joerg Steffen, DFKI, Robert J Lebowitz, Finaltouch IT LLC
     /// </summary>
-    public class TextUnit
+    public class NewParagraph
     {
         /// <summary>
-        ///     Creates a new instance of <seealso cref="TextUnit" />.
+        ///     Creates a new instance of <seealso cref="Paragraph" />.
         /// </summary>
-        public TextUnit()
+        public NewParagraph()
         {
             StartIndex = 0;
             EndIndex = 0;
-            Tokens = new List<Token>();
+            TextUnits = new List<TextUnit>();
+        }
+
+        public NewParagraph(string s, int offset)
+        {
+            StartIndex = offset;
+            EndIndex = offset + s.Length;
+            TextUnits = new List<TextUnit>();
         }
 
         /// <summary>
-        ///     Creates a new instance of TextUnit" containing the given tokens.
+        ///     Creates a new instance of <seealso cref="Paragraph" /> that contains the given text units.
         /// </summary>
-        /// <param name="tokens">A list of tokens.</param>
-        public TextUnit(IList<Token> tokens)
+        /// <param name="textUnits">
+        ///     a list of text units
+        /// </param>
+        public void Paragraph(IList<TextUnit> textUnits)
         {
-            Tokens = tokens;
+            TextUnits = textUnits;
         }
 
-        // list with the tokens of the text unit
-        private IList<Token> TokenList { get; set; }
+        public IList<TextUnit> TextUnits { get; private set; }
 
         /// <summary>The start index.</summary>
         public int StartIndex { get; set; }
 
+
         /// <summary>The end index.</summary>
         public int EndIndex { get; set; }
 
-        /// <summary>The token list.</summary>
-        public IList<Token> Tokens
-        {
-            get => TokenList;
-            set
-            {
-                TokenList = value;
-                if (value.Count > 0)
-                {
-                    StartIndex = value[0].StartIndex;
-                    EndIndex = value[^1].EndIndex;
-                }
-                else
-                {
-                    StartIndex = 0;
-                    EndIndex = 0;
-                }
-            }
-        }
+       
 
         public override string ToString()
         {
             var result =
-                new StringBuilder(
-                    $"  Text Unit Start: {StartIndex}{Environment.NewLine}  Text Unit End: {EndIndex}{Environment.NewLine}");
-            // add tokens
-            foreach (var token in Tokens)
+                new StringBuilder($"Paragraph Start: {StartIndex}{Environment.NewLine}Paragraph End: {EndIndex}{Environment.NewLine}");
+            foreach (var unit in TextUnits)
             {
-                result.Append(token);
+                result.Append(unit);
             }
 
             return result.ToString();

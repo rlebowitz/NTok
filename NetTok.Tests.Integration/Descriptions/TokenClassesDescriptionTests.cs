@@ -16,7 +16,7 @@ namespace NetTok.Tests.Integration.Descriptions
         private ITestOutputHelper Output { get; }
 
         [Fact]
-        public void LoadEnglishCliticsTest()
+        public void LoadEnglishTokenClassesTest()
         {
             var macrosMap = new Dictionary<string, string>();
             var macroDescription = new MacroDescription("en");
@@ -25,12 +25,16 @@ namespace NetTok.Tests.Integration.Descriptions
             Description.Load(macrosMap);
             Assert.NotNull(macrosMap);
             Assert.Equal(3, macrosMap.Keys.Count);
-            Assert.Equal(7, Description.DefinitionsMap.Keys.Count); 
+            Assert.Equal(7, Description.DefinitionsMap.Keys.Count);
+            foreach (var className in Description.DefinitionsMap.Keys)
+            {
+                Output.WriteLine($"Class Name: {className}\tPattern: {Description.DefinitionsMap[className].ToString()} ");
+            }
             Assert.Equal(1, Description.RulesMap.Count); // ALL_RULE
         }
 
         [Fact]
-        public void LoadDefaultCliticTest()
+        public void LoadDefaultEnglishTokenClassesTest()
         {
             var macrosMap = new Dictionary<string, string>();
             var macroDescription = new MacroDescription("default");
